@@ -1926,6 +1926,12 @@
 
       usedAutoReverseThisRound = false;
 
+      // Reset golden snail ability state on new game
+      goldenSnailStamina = 100;
+      snailKeyDown = false;
+      snailRegenAccum = 0;
+      lastSnailUpdate = Date.now();
+
       setAbilityVisibility();
 
       overlay.classList.remove('visible');
