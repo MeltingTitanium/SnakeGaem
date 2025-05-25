@@ -59,13 +59,13 @@
     }
 
     /* ===== MAIN-MENU ===== */
-    #menuContainer, #settingsContainer, #shopContainer, #proShopContainer, #shopSelectContainer, #oddsContainer, #advancedShopContainer {
+    #menuContainer, #settingsContainer, #shopContainer, #proShopContainer, #shopSelectContainer, #oddsContainer, #advancedShopContainer, #artifactContainer {
       position:absolute; inset:0; z-index:2;
       background: var(--dark);
       display:flex; flex-direction:column;
       align-items:center; justify-content:flex-start;
     }
-    #settingsContainer, #shopContainer, #proShopContainer, #shopSelectContainer, #oddsContainer, #advancedShopContainer { display:none; }
+    #settingsContainer, #shopContainer, #proShopContainer, #shopSelectContainer, #oddsContainer, #advancedShopContainer, #artifactContainer { display:none; }
 
     #gameTitle {
       font-size:56px; letter-spacing:3px;
@@ -163,7 +163,7 @@
     #settingsBackBtn:hover { color:var(--gold); border-color:var(--gold); }
 
     /* ===== SHOP SCREEN ===== */
-    #shopContainer h2, #proShopContainer h2, #shopSelectContainer h2, #advancedShopContainer h2 {
+    #shopContainer h2, #proShopContainer h2, #shopSelectContainer h2, #advancedShopContainer h2, #artifactContainer h2 {
       margin-top:40px;
       font-size:48px;
       color:var(--gold);
@@ -206,6 +206,27 @@
     }
     .shopItem .buy-btn.on  { background:limegreen; color:#000; border-color:limegreen; }
     .shopItem .buy-btn.off { background:#c00;      color:#fff; border-color:#c00; }
+
+    /* ===== ARTIFACT SCREEN ===== */
+    .artifactItem {
+      width:200px; padding:10px; margin:20px;
+      display:flex; flex-direction:column; align-items:center;
+      border:2px solid var(--grey);
+      position:relative;
+    }
+    .artifactItem img { width:50px; height:50px; image-rendering:pixelated; }
+    .artifactItem .info-btn {
+      font-size:16px; cursor:pointer; color:var(--grey); margin-left:8px;
+      transition:color .2s;
+    }
+    .artifactItem .info-btn:hover { color:var(--gold); }
+    .artifactItem .toggle-btn {
+      margin-top:8px; font-family:'Press Start 2P',monospace; font-size:14px;
+      border:2px solid var(--grey); padding:5px 10px; cursor:pointer;
+      transition:all .2s ease-out;
+    }
+    .artifactItem .toggle-btn.on  { background:limegreen; color:#000; border-color:limegreen; }
+    .artifactItem .toggle-btn.off { background:#c00; color:#fff; border-color:#c00; }
     #shopBackBtn, #proShopBackBtn, #advancedShopBackBtn {
       margin:20px; font-size:24px;
       color:var(--grey); border:2px solid var(--grey);
@@ -598,6 +619,22 @@
     <button id="advancedShopBackBtn">Back</button>
   </div>
 
+  <!-- ARTIFACTS SCREEN -->
+  <div id="artifactContainer">
+    <h2>Artifacts</h2>
+    <div id="artifactItems">
+      <div class="artifactItem" id="blasterArtifact">
+        <img id="blasterIconImg" src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Blaster%20Icon%20(2).png" alt="Blaster Icon" />
+        <div style="display:flex; align-items:center; margin-top:8px;">
+          <span id="blasterOdds">Odds: 2%</span>
+          <span id="blasterInfo" class="info-btn">?</span>
+        </div>
+        <button id="blasterToggle" class="toggle-btn off">OFF</button>
+      </div>
+    </div>
+    <button id="artifactBackBtn">Back</button>
+  </div>
+
   <!-- ODDS SCREEN -->
   <div id="oddsContainer">
     <h2>Odds</h2>
@@ -616,6 +653,10 @@
     <div class="appleRow hugeMegaRow" style="display:none;">
       <div class="appleIcon hugeMega"></div>
       <span id="hugeMegaOddsText">0%</span>
+    </div>
+    <div class="appleRow blasterRow" style="display:none;">
+      <img id="blasterOddsIcon" src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Blaster%20Icon%20(2).png" style="width:40px;height:40px;image-rendering:pixelated;"/>
+      <span id="blasterOddsText">0%</span>
     </div>
     <button id="oddsBackBtn">Back</button>
   </div>
@@ -775,11 +816,16 @@
     const shopCoinDisplay      = document.getElementById('shopCoinDisplay');
     const shopItemsEl          = document.getElementById('shopItems');
 
-    const oddsContainer        = document.getElementById('oddsContainer');
-    const oddsBtn              = document.getElementById('oddsBtn');
-    const artifactBtn          = document.getElementById('artifactBtn');
-    const oddsBackBtn          = document.getElementById('oddsBackBtn');
-    const redOddsText          = document.getElementById('redOddsText');
+      const oddsContainer        = document.getElementById('oddsContainer');
+      const oddsBtn              = document.getElementById('oddsBtn');
+      const artifactBtn          = document.getElementById('artifactBtn');
+      const artifactContainer    = document.getElementById('artifactContainer');
+      const artifactBackBtn      = document.getElementById('artifactBackBtn');
+      const blasterToggleBtn     = document.getElementById('blasterToggle');
+      const blasterInfoBtn       = document.getElementById('blasterInfo');
+      const blasterOddsText      = document.getElementById('blasterOddsText');
+      const oddsBackBtn          = document.getElementById('oddsBackBtn');
+      const redOddsText          = document.getElementById('redOddsText');
     const megaOddsText         = document.getElementById('megaOddsText');
     const hugeOddsText         = document.getElementById('hugeOddsText');
     const hugeMegaOddsText     = document.getElementById('hugeMegaOddsText');
@@ -819,9 +865,10 @@
     const normalOddsInput      = document.getElementById('normalOddsInput');
     const megaOddsInput        = document.getElementById('megaOddsInput');
     const hugeOddsInput        = document.getElementById('hugeOddsInput');
-    const hugeMegaOddsInput    = document.getElementById('hugeMegaOddsInput');
-    const coinSetBtn           = document.getElementById('coinSetBtn');
-    const oddsSetBtn           = document.getElementById('oddsSetBtn');
+      const hugeMegaOddsInput    = document.getElementById('hugeMegaOddsInput');
+      const coinSetBtn           = document.getElementById('coinSetBtn');
+      const oddsSetBtn           = document.getElementById('oddsSetBtn');
+      const blasterImg          = document.getElementById('blasterOddsIcon');
 
     const comboContainer       = document.getElementById('comboContainer');
     const comboMultiplierTextEl= document.getElementById('comboMultiplierText');
@@ -858,7 +905,9 @@
     let hasExplodePlus = false, explodePlusEnabled = false;
     let hasComboPlus = false, comboPlusEnabled = false;
     let hasMegaMk2 = false, megaMk2Enabled = false;
-    let hasSpeedPlus = false, speedPlusEnabled = false;
+      let hasSpeedPlus = false, speedPlusEnabled = false;
+      let hasArtifactsFeature = false;
+      let blasterEnabled = false;
 
     // NEW: track discovery
     let hasDiscoveredHugeMegaApple= false;
@@ -1031,39 +1080,54 @@
       shopSelectContainer.style.display = 'flex';
     });
 
-    oddsBtn.addEventListener('click', () => {
-      let redPerc, megaPerc, hugePerc, hugeMegaPerc;
-      if (oddsConfig) {
-        const sum = oddsConfig.rawNormal + oddsConfig.rawMega + oddsConfig.rawHuge + oddsConfig.rawHugeMega;
-        redPerc      = oddsConfig.rawNormal   / sum;
-        megaPerc     = oddsConfig.rawMega     / sum;
-        hugePerc     = oddsConfig.rawHuge     / sum;
-        hugeMegaPerc = oddsConfig.rawHugeMega / sum;
-      } else {
-        const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
-        const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
-        const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
-        const megaTotal    = baseMega + bonusMega + mk2Bonus;
-        const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
-        let hugeMegaTotal  = 0;
-        if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
-          hugeMegaTotal = 0.001;
-          if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
+      oddsBtn.addEventListener('click', () => {
+        let redPerc, megaPerc, hugePerc, hugeMegaPerc;
+        let blasterPerc = 0;
+        if (oddsConfig) {
+          let rawNormal   = oddsConfig.rawNormal;
+          const rawMega   = oddsConfig.rawMega;
+          const rawHuge   = oddsConfig.rawHuge;
+          const rawHugeMega = oddsConfig.rawHugeMega;
+          let rawBlaster = 0;
+          if (blasterEnabled) {
+            rawNormal = Math.max(0, rawNormal - 2);
+            rawBlaster = 2;
+          }
+          const sum = rawNormal + rawMega + rawHuge + rawHugeMega + rawBlaster;
+          redPerc      = rawNormal / sum;
+          megaPerc     = rawMega   / sum;
+          hugePerc     = rawHuge   / sum;
+          hugeMegaPerc = rawHugeMega / sum;
+          blasterPerc  = rawBlaster / sum;
+        } else {
+          const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
+          const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
+          const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
+          const megaTotal    = baseMega + bonusMega + mk2Bonus;
+          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          let hugeMegaTotal  = 0;
+          if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
+            hugeMegaTotal = 0.001;
+            if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
+          }
+          const blasterTotal = blasterEnabled ? 0.02 : 0;
+          redPerc      = 1 - megaTotal - hugeTotal - hugeMegaTotal - blasterTotal;
+          megaPerc     = megaTotal;
+          hugePerc     = hugeTotal;
+          hugeMegaPerc = hugeMegaTotal;
+          blasterPerc  = blasterTotal;
         }
-        redPerc      = 1 - megaTotal - hugeTotal - hugeMegaTotal;
-        megaPerc     = megaTotal;
-        hugePerc     = hugeTotal;
-        hugeMegaPerc = hugeMegaTotal;
-      }
-      redOddsText.textContent      = (redPerc * 100).toFixed(1) + '%';
-      megaOddsText.textContent     = (megaPerc * 100).toFixed(1) + '%';
-      hugeOddsText.textContent     = (hugePerc * 100).toFixed(1) + '%';
-      hugeMegaOddsText.textContent = (hugeMegaPerc * 100).toFixed(1) + '%';
-      document.querySelector('.hugeMegaRow').style.display = hasDiscoveredHugeMegaApple ? 'flex' : 'none';
+        redOddsText.textContent      = (redPerc * 100).toFixed(1) + '%';
+        megaOddsText.textContent     = (megaPerc * 100).toFixed(1) + '%';
+        hugeOddsText.textContent     = (hugePerc * 100).toFixed(1) + '%';
+        hugeMegaOddsText.textContent = (hugeMegaPerc * 100).toFixed(1) + '%';
+        blasterOddsText.textContent  = (blasterPerc * 100).toFixed(1) + '%';
+        document.querySelector('.hugeMegaRow').style.display = hasDiscoveredHugeMegaApple ? 'flex' : 'none';
+        document.querySelector('.blasterRow').style.display = blasterEnabled ? 'flex' : 'none';
 
-      menuContainer.style.display  = 'none';
-      oddsContainer.style.display  = 'flex';
-    });
+        menuContainer.style.display  = 'none';
+        oddsContainer.style.display  = 'flex';
+      });
     oddsBackBtn.addEventListener('click', () => {
       oddsContainer.style.display  = 'none';
       menuContainer.style.display  = 'flex';
@@ -1074,11 +1138,26 @@
       if (musicEnabled) bgMusic.play().catch(() => {});
       init();
     });
-    artifactBtn.addEventListener('click', () => {
-      menuContainer.style.display = 'none';
-      infoText.textContent = "Coming soon";
-      infoModal.style.display = 'flex';
-    });
+      artifactBtn.addEventListener('click', () => {
+        menuContainer.style.display = 'none';
+        artifactContainer.style.display = 'flex';
+      });
+      artifactBackBtn.addEventListener('click', () => {
+        artifactContainer.style.display = 'none';
+        menuContainer.style.display = 'flex';
+      });
+      blasterToggleBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        blasterEnabled = !blasterEnabled;
+        blasterToggleBtn.textContent = blasterEnabled ? 'ON' : 'OFF';
+        blasterToggleBtn.classList.toggle('on', blasterEnabled);
+        blasterToggleBtn.classList.toggle('off', !blasterEnabled);
+      });
+      blasterInfoBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        infoText.textContent = 'Coming soon';
+        infoModal.style.display = 'flex';
+      });
 
     document.addEventListener('keydown', e => {
       if (e.code === 'Numpad5') {
@@ -1663,9 +1742,10 @@
             } else if (item.id === 'autoReverse') {
               hasAutoReverseAbility = true;
               autoReverseAbilityEnabled = true;
-            } else if (item.id === 'artifacts') {
-              artifactBtn.style.display = 'inline';
-            }
+              } else if (item.id === 'artifacts') {
+                artifactBtn.style.display = 'inline';
+                hasArtifactsFeature = true;
+              }
             updateDisplays();
             updateAdvancedShop();
           } else {
@@ -1853,42 +1933,50 @@
       menuContainer.style.display = 'flex';
     });
 
-    function randomApple() {
-      let p;
-      let type;
-      let rawNormal, rawMega, rawHuge, rawHugeMega;
-      if (oddsConfig) {
-        rawNormal   = oddsConfig.rawNormal;
-        rawMega     = oddsConfig.rawMega;
-        rawHuge     = oddsConfig.rawHuge;
-        rawHugeMega = oddsConfig.rawHugeMega;
-      } else {
-        const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
-        const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
-        const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
-        const megaTotal    = baseMega + bonusMega + mk2Bonus;
-        const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
-        let hugeMegaTotal  = 0;
-        if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
-          hugeMegaTotal = 0.001;
-          if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
+      function randomApple() {
+        let p;
+        let type;
+        let rawNormal, rawMega, rawHuge, rawHugeMega, rawBlaster = 0;
+        if (oddsConfig) {
+          rawNormal   = oddsConfig.rawNormal;
+          rawMega     = oddsConfig.rawMega;
+          rawHuge     = oddsConfig.rawHuge;
+          rawHugeMega = oddsConfig.rawHugeMega;
+          if (blasterEnabled) {
+            rawNormal = Math.max(0, rawNormal - 2);
+            rawBlaster = 2;
+          }
+        } else {
+          const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
+          const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
+          const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
+          const megaTotal    = baseMega + bonusMega + mk2Bonus;
+          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          let hugeMegaTotal  = 0;
+          if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
+            hugeMegaTotal = 0.001;
+            if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
+          }
+          const blasterTotal = blasterEnabled ? 0.02 : 0;
+          rawMega     = megaTotal    * 100;
+          rawHuge     = hugeTotal    * 100;
+          rawHugeMega = hugeMegaTotal * 100;
+          rawBlaster  = blasterTotal * 100;
+          rawNormal   = 100 - rawMega - rawHuge - rawHugeMega - rawBlaster;
         }
-        rawMega     = megaTotal    * 100;
-        rawHuge     = hugeTotal    * 100;
-        rawHugeMega = hugeMegaTotal * 100;
-        rawNormal   = 100 - rawMega - rawHuge - rawHugeMega;
-      }
-      const sumRaw = rawNormal + rawMega + rawHuge + rawHugeMega;
-      const r = Math.random() * sumRaw;
-      if (r < rawHugeMega) {
-        type = 'hugeMega';
-      } else if (r < rawHugeMega + rawHuge) {
-        type = 'huge';
-      } else if (r < rawHugeMega + rawHuge + rawMega) {
-        type = 'mega';
-      } else {
-        type = 'normal';
-      }
+        const sumRaw = rawNormal + rawMega + rawHuge + rawHugeMega + rawBlaster;
+        const r = Math.random() * sumRaw;
+        if (r < rawHugeMega) {
+          type = 'hugeMega';
+        } else if (r < rawHugeMega + rawHuge) {
+          type = 'huge';
+        } else if (r < rawHugeMega + rawHuge + rawMega) {
+          type = 'mega';
+        } else if (r < rawHugeMega + rawHuge + rawMega + rawBlaster) {
+          type = 'blaster';
+        } else {
+          type = 'normal';
+        }
       while (true) {
         if (type === 'huge' || type === 'hugeMega') {
           p = {
@@ -1990,14 +2078,18 @@
           }
           baseScoreInc = 35;
           baseCoinInc  = 50;
-        } else if (apple.type === 'mega') {
-          for (let i = 0; i < 2; i++) snake.push({...snake[snake.length-1]});
-          baseScoreInc = 10;
-          baseCoinInc  = 10;
-        } else {
-          baseScoreInc = 1;
-          baseCoinInc  = 1;
-        }
+          } else if (apple.type === 'mega') {
+            for (let i = 0; i < 2; i++) snake.push({...snake[snake.length-1]});
+            baseScoreInc = 10;
+            baseCoinInc  = 10;
+          } else if (apple.type === 'blaster') {
+            snake.pop();
+            baseScoreInc = 0;
+            baseCoinInc  = 0;
+          } else {
+            baseScoreInc = 1;
+            baseCoinInc  = 1;
+          }
 
         const totalScoreInc = baseScoreInc * comboMultiplier;
         const totalCoinInc  = baseCoinInc * multiplier * comboMultiplier;
@@ -2116,13 +2208,15 @@
 
     function draw() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      if (apple.type === 'huge' || apple.type === 'hugeMega') {
-        ctx.fillStyle = (apple.type==='huge') ? 'red' : '#551A8B';
-        ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize*3, tileSize*3);
-      } else {
-        ctx.fillStyle = (apple.type==='mega') ? '#551A8B' : 'red';
-        ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
-      }
+        if (apple.type === 'huge' || apple.type === 'hugeMega') {
+          ctx.fillStyle = (apple.type==='huge') ? 'red' : '#551A8B';
+          ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize*3, tileSize*3);
+        } else if (apple.type === 'blaster') {
+          ctx.drawImage(blasterImg, apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
+        } else {
+          ctx.fillStyle = (apple.type==='mega') ? '#551A8B' : 'red';
+          ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
+        }
       const t = accumulator / moveInterval;
       ctx.fillStyle = '#006400';
       for (let i=0; i<snake.length; i++) {
