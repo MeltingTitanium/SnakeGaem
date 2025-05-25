@@ -59,13 +59,13 @@
     }
 
     /* ===== MAIN-MENU ===== */
-    #menuContainer, #settingsContainer, #shopContainer, #proShopContainer, #shopSelectContainer, #oddsContainer, #advancedShopContainer {
+    #menuContainer, #settingsContainer, #shopContainer, #proShopContainer, #shopSelectContainer, #oddsContainer, #advancedShopContainer, #artifactContainer {
       position:absolute; inset:0; z-index:2;
       background: var(--dark);
       display:flex; flex-direction:column;
       align-items:center; justify-content:flex-start;
     }
-    #settingsContainer, #shopContainer, #proShopContainer, #shopSelectContainer, #oddsContainer, #advancedShopContainer { display:none; }
+    #settingsContainer, #shopContainer, #proShopContainer, #shopSelectContainer, #oddsContainer, #advancedShopContainer, #artifactContainer { display:none; }
 
     #gameTitle {
       font-size:56px; letter-spacing:3px;
@@ -206,13 +206,34 @@
     }
     .shopItem .buy-btn.on  { background:limegreen; color:#000; border-color:limegreen; }
     .shopItem .buy-btn.off { background:#c00;      color:#fff; border-color:#c00; }
-    #shopBackBtn, #proShopBackBtn, #advancedShopBackBtn {
+
+    /* ===== ARTIFACTS SCREEN ===== */
+    .artifactItem {
+      width:250px; padding:20px; margin:20px;
+      display:flex; flex-direction:column; align-items:center;
+      border:2px solid var(--grey);
+      transition:transform .15s ease-out, border-color .2s;
+    }
+    .artifactItem:hover { transform:translateY(-4px); border-color:var(--gold); }
+    .artifactItem .info-btn {
+      font-size:16px; cursor:pointer; color:var(--grey);
+      margin-left:10px; transition:color .2s;
+    }
+    .artifactItem .info-btn:hover { color:var(--gold); }
+    .artifactItem .toggle-btn {
+      margin-top:8px; font-family:'Press Start 2P',monospace; font-size:14px;
+      border:2px solid var(--grey); padding:5px 10px; cursor:pointer;
+      transition:all .2s ease-out;
+    }
+    .artifactItem .toggle-btn.on  { background:limegreen; color:#000; border-color:limegreen; }
+    .artifactItem .toggle-btn.off { background:#c00;      color:#fff; border-color:#c00; }
+    #shopBackBtn, #proShopBackBtn, #advancedShopBackBtn, #artifactBackBtn {
       margin:20px; font-size:24px;
       color:var(--grey); border:2px solid var(--grey);
       background:none; cursor:pointer;
       transition:all .2s ease-out;
     }
-    #shopBackBtn:hover, #proShopBackBtn:hover, #advancedShopBackBtn:hover { color:var(--gold); border-color:var(--gold); }
+    #shopBackBtn:hover, #proShopBackBtn:hover, #advancedShopBackBtn:hover, #artifactBackBtn:hover { color:var(--gold); border-color:var(--gold); }
 
     /* ===== SHOP SELECT SCREEN ===== */
     #shopSelectButtons {
@@ -598,6 +619,20 @@
     <button id="advancedShopBackBtn">Back</button>
   </div>
 
+  <!-- ARTIFACTS SCREEN -->
+  <div id="artifactContainer">
+    <h2>Artifacts</h2>
+    <div class="artifactItem">
+      <img class="artifactIcon" src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Blaster%20Icon%20(2).png" alt="Blaster Icon" />
+      <div style="display:flex; align-items:center; margin-top:8px;">
+        <span id="blasterOdds">Odds: 2%</span>
+        <span class="info-btn" id="blasterInfoBtn" style="margin-left:10px;">?</span>
+      </div>
+      <button class="toggle-btn off" id="blasterToggleBtn">OFF</button>
+    </div>
+    <button id="artifactBackBtn">Back</button>
+  </div>
+
   <!-- ODDS SCREEN -->
   <div id="oddsContainer">
     <h2>Odds</h2>
@@ -775,6 +810,11 @@
     const shopCoinDisplay      = document.getElementById('shopCoinDisplay');
     const shopItemsEl          = document.getElementById('shopItems');
 
+    const artifactContainer    = document.getElementById('artifactContainer');
+    const artifactBackBtn      = document.getElementById('artifactBackBtn');
+    const blasterToggleBtn     = document.getElementById('blasterToggleBtn');
+    const blasterInfoBtn       = document.getElementById('blasterInfoBtn');
+
     const oddsContainer        = document.getElementById('oddsContainer');
     const oddsBtn              = document.getElementById('oddsBtn');
     const artifactBtn          = document.getElementById('artifactBtn');
@@ -833,6 +873,9 @@
     const selectAudio = new Audio('https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/main/Sounds%20%26%20Music/Menu%20Select%20-%20made%20by%20Fupi%20on%20OpenGameArt.org.ogg');
     const coinAudio   = new Audio('https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/main/Sounds%20%26%20Music/coin%20by%20Fupi%20on%20OpenGameArt.org.wav');
 
+    const artifactImg = new Image();
+    artifactImg.src = 'https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Blaster%20Icon%20(2).png';
+
     // Settings & state
     let musicEnabled, sfxEnabled, skipStartScreen;
     let coins = 0, ownedItems = [];
@@ -859,6 +902,8 @@
     let hasComboPlus = false, comboPlusEnabled = false;
     let hasMegaMk2 = false, megaMk2Enabled = false;
     let hasSpeedPlus = false, speedPlusEnabled = false;
+
+    let hasArtifacts = false, artifactEnabled = false;
 
     // NEW: track discovery
     let hasDiscoveredHugeMegaApple= false;
@@ -1076,7 +1121,24 @@
     });
     artifactBtn.addEventListener('click', () => {
       menuContainer.style.display = 'none';
-      infoText.textContent = "Coming soon";
+      artifactContainer.style.display = 'flex';
+      blasterToggleBtn.textContent = artifactEnabled ? 'ON' : 'OFF';
+      blasterToggleBtn.classList.toggle('on', artifactEnabled);
+      blasterToggleBtn.classList.toggle('off', !artifactEnabled);
+    });
+    artifactBackBtn.addEventListener('click', () => {
+      artifactContainer.style.display = 'none';
+      menuContainer.style.display = 'flex';
+    });
+    blasterToggleBtn.addEventListener('click', () => {
+      artifactEnabled = !artifactEnabled;
+      blasterToggleBtn.textContent = artifactEnabled ? 'ON' : 'OFF';
+      blasterToggleBtn.classList.toggle('on', artifactEnabled);
+      blasterToggleBtn.classList.toggle('off', !artifactEnabled);
+    });
+    blasterInfoBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      infoText.textContent = 'Coming soon';
       infoModal.style.display = 'flex';
     });
 
@@ -1664,6 +1726,8 @@
               hasAutoReverseAbility = true;
               autoReverseAbilityEnabled = true;
             } else if (item.id === 'artifacts') {
+              hasArtifacts = true;
+              artifactEnabled = false;
               artifactBtn.style.display = 'inline';
             }
             updateDisplays();
@@ -1857,8 +1921,9 @@
       let p;
       let type;
       let rawNormal, rawMega, rawHuge, rawHugeMega;
+      const artifactChance = artifactEnabled ? 2 : 0;
       if (oddsConfig) {
-        rawNormal   = oddsConfig.rawNormal;
+        rawNormal   = oddsConfig.rawNormal - artifactChance;
         rawMega     = oddsConfig.rawMega;
         rawHuge     = oddsConfig.rawHuge;
         rawHugeMega = oddsConfig.rawHugeMega;
@@ -1876,9 +1941,9 @@
         rawMega     = megaTotal    * 100;
         rawHuge     = hugeTotal    * 100;
         rawHugeMega = hugeMegaTotal * 100;
-        rawNormal   = 100 - rawMega - rawHuge - rawHugeMega;
+        rawNormal   = 100 - rawMega - rawHuge - rawHugeMega - artifactChance;
       }
-      const sumRaw = rawNormal + rawMega + rawHuge + rawHugeMega;
+      const sumRaw = rawNormal + rawMega + rawHuge + rawHugeMega + artifactChance;
       const r = Math.random() * sumRaw;
       if (r < rawHugeMega) {
         type = 'hugeMega';
@@ -1886,6 +1951,8 @@
         type = 'huge';
       } else if (r < rawHugeMega + rawHuge + rawMega) {
         type = 'mega';
+      } else if (r < rawHugeMega + rawHuge + rawMega + artifactChance) {
+        type = 'artifact';
       } else {
         type = 'normal';
       }
@@ -1994,6 +2061,9 @@
           for (let i = 0; i < 2; i++) snake.push({...snake[snake.length-1]});
           baseScoreInc = 10;
           baseCoinInc  = 10;
+        } else if (apple.type === 'artifact') {
+          baseScoreInc = 0;
+          baseCoinInc  = 0;
         } else {
           baseScoreInc = 1;
           baseCoinInc  = 1;
@@ -2116,7 +2186,9 @@
 
     function draw() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      if (apple.type === 'huge' || apple.type === 'hugeMega') {
+      if (apple.type === 'artifact') {
+        ctx.drawImage(artifactImg, apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
+      } else if (apple.type === 'huge' || apple.type === 'hugeMega') {
         ctx.fillStyle = (apple.type==='huge') ? 'red' : '#551A8B';
         ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize*3, tileSize*3);
       } else {
