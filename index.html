@@ -1175,6 +1175,10 @@
         goldenSnailEnabled = !goldenSnailEnabled;
         if (hasDiscoveredGoldenSnail) {
           goldenSnailAbilityEnabled = goldenSnailEnabled;
+          if (goldenSnailEnabled) {
+            slowAbilityEnabled = false;
+          }
+          updateShop();
         }
         updateGoldenSnailToggle();
         setAbilityVisibility();
@@ -1296,6 +1300,10 @@
         `;
         const buyBtn  = div.querySelector('.buy-btn');
         const infoBtn = div.querySelector('.info-btn');
+        if (buyBtn && isOwned && item.id === 'slow' && goldenSnailEnabled && hasDiscoveredGoldenSnail) {
+          div.classList.add('disabled');
+          buyBtn.disabled = true;
+        }
         if (buyBtn && isOwned && ['slow','explode','combo','mega','speed'].includes(item.id)) {
           buyBtn.classList.add(
             ((item.id==='slow'    && slowAbilityEnabled)   ||
@@ -1344,6 +1352,7 @@
               return;
             }
             if (item.id === 'slow') {
+              if (goldenSnailEnabled && hasDiscoveredGoldenSnail) return;
               slowAbilityEnabled = !slowAbilityEnabled;
             }
             if (item.id === 'explode') {
@@ -2134,11 +2143,13 @@
               hasDiscoveredGoldenSnail = true;
               goldenSnailAbilityEnabled = true;
               goldenSnailEnabled = true;
+              slowAbilityEnabled = false;
               slowIconEl.src = goldenSnailImg.src;
               slowCooldownText.style.color = '#fff';
               discoveredTextEl.textContent = 'Golden Snail Artifact Discovered';
               setTimeout(() => { discoveredTextEl.textContent = ''; }, 5000);
               updateGoldenSnailToggle();
+              updateShop();
               setAbilityVisibility();
             }
             snake.pop();
@@ -2316,6 +2327,7 @@
       } else {
         if (!goldenSnailAbilityEnabled) {
           slowIconEl.style.display = 'none';
+          slowCooldownText.textContent = '';
         } else {
           slowIconEl.style.display = 'block';
           slowIconEl.classList.remove('disabled');
@@ -2326,9 +2338,9 @@
           } else {
             slowdownActive = false;
             snailRegenAccum += delta;
-            while (snailRegenAccum >= 2000) {
-              goldenSnailStamina = Math.min(100, goldenSnailStamina + 5);
-              snailRegenAccum -= 2000;
+            while (snailRegenAccum >= 400) {
+              goldenSnailStamina = Math.min(100, goldenSnailStamina + 1);
+              snailRegenAccum -= 400;
             }
           }
           slowCooldownText.textContent = Math.round(goldenSnailStamina) + '%';
