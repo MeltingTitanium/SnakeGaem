@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snake Gaem – Dark Mode + Proficient Shop + Advanced Shop + Huge Apples+</title>
+
+  <!-- 8-bit-style display font -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ===== GLOBAL ===== */
+    :root {
+      --gold:  #d4af37;
+      --grey:  #bbb;
+      --black: #000;
+      --dark:  #111;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; user-select:none; }
+    body {
+      background: var(--dark);
+      height:100vh; width:100vw; overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Press Start 2P',monospace;
+      color:#fff;
+      position: relative;
+    }
+
+    /* Discovered text */
+    #discoveredText {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 24px;
+      z-index: 20;
+    }
+
+    /* ===== START SCREEN ===== */
+    #startScreen {
+      position: absolute; inset: 0;
+      background: #000;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10;
+    }
+    @keyframes fade {
+      0%,100% { opacity: 0; }
+      50%     { opacity: 1; }
+    }
+    #startText {
+      font-size: 24px; letter-spacing: 2px;
+      animation: fade 2s infinite;
+      color: var(--gold);
+      text-shadow: 0 0 4px var(--gold);
+    }
+
+    /* ===== MAIN-MENU ===== */
+    #menuContainer, #settingsContainer, #shopContainer, #proShopContainer, #shopSelectContainer, #oddsContainer, #advancedShopContainer {
+      position:absolute; inset:0; z-index:2;
+      background: var(--dark);
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:flex-start;
+    }
+    #settingsContainer, #shopContainer, #proShopContainer, #shopSelectContainer, #oddsContainer, #advancedShopContainer { display:none; }
+
+    #gameTitle {
+      font-size:56px; letter-spacing:3px;
+      text-shadow:0 0 8px var(--gold);
+      opacity:0; transition:opacity 1s ease-out;
+      margin-top:40px;
+    }
+    #menuGif {
+      max-width:480px; width:90%;
+      image-rendering:pixelated;
+      opacity:0;
+      transform: translateY(10%) scale(0.9);
+      transition:opacity .5s ease-out, transform .5s ease-out;
+      margin:32px 0;
+    }
+
+    /* ===== NAV (perfectly centered) ===== */
+    #nav {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(calc(-50% + 19px));
+      display: flex;
+      align-items: center;
+      gap: 60px;     /* adjust to widen/narrow gaps */
+      opacity: 0;
+      transition: opacity 0.5s ease-out;
+      font-size: 32px;
+    }
+
+    #nav .navButton {
+      position: relative;
+      display: block;
+      white-space: nowrap;
+    }
+
+    .navButton {
+      cursor:pointer; color:var(--grey);
+      transition:transform .15s ease-out;
+      position:relative;
+    }
+    .navButton:hover { transform:translateY(-4px) }
+    .navButton.selected { color:var(--gold) }
+    .navButton.selected::before,
+    .navButton.selected::after {
+      position:absolute; top:0; font-weight:bold; color:var(--gold);
+    }
+    .navButton.selected::before { content:"< "; left:-32px }
+    .navButton.selected::after  { content:" >"; right:-32px }
+
+    /* ===== SETTINGS SCREEN ===== */
+    #settingsContainer h2 {
+      margin-top:40px;
+      font-size:48px;
+      text-shadow:0 0 6px var(--gold);
+    }
+    .setting-item {
+      margin:32px 0;
+      display:flex; align-items:center; gap:20px;
+      font-size:24px;
+    }
+    #startScreenSetting { display: none; }
+    .switch {
+      position: relative;
+      width:60px; height:34px;
+    }
+    .switch input {
+      opacity:0; width:0; height:0;
+    }
+    .slider {
+      position:absolute; cursor:pointer;
+      top:0; left:0; right:0; bottom:0;
+      background:var(--grey);
+      transition:.4s;
+      border-radius:34px;
+    }
+    .slider:before {
+      position:absolute;
+      content:"";
+      height:26px; width:26px;
+      left:4px; top:4px;
+      background:white;
+      transition:.4s;
+      border-radius:50%;
+    }
+    input:checked + .slider { background:var(--gold); }
+    input:checked + .slider:before { transform:translateX(26px); }
+    #settingsBackBtn {
+      margin-top:40px;
+      font-size:24px; padding:10px 20px;
+      color:var(--grey); border:2px solid var(--grey);
+      background:none; cursor:pointer;
+      transition: all .2s ease-out;
+    }
+    #settingsBackBtn:hover { color:var(--gold); border-color:var(--gold); }
+
+    /* ===== SHOP SCREEN ===== */
+    #shopContainer h2, #proShopContainer h2, #shopSelectContainer h2, #advancedShopContainer h2 {
+      margin-top:40px;
+      font-size:48px;
+      color:var(--gold);
+      text-shadow:0 0 6px var(--gold);
+    }
+    #shopCoinDisplay, #proShopCoinDisplay, #advancedShopCoinDisplay { font-size:24px; margin:20px 0; }
+    #shopItems, #proShopItems, #advancedShopItems {
+      flex:1;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:20px;
+      width:100%;
+      flex-wrap:wrap;
+    }
+    .shopItem {
+      width:250px; height:120px;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      border:2px solid var(--grey);
+      position:relative;
+      transition:transform .15s ease-out, border-color .2s, opacity .5s;
+    }
+    .shopItem:hover { transform:translateY(-4px); border-color:var(--gold); }
+    .shopItem.disabled { opacity:0.5; cursor:default; }
+    .shopItem .price { font-size:16px; color:var(--gold); margin-top:8px; }
+    .shopItem .info-btn {
+      position: absolute; top: 5px; right: 5px;
+      font-size: 16px; cursor: pointer; color: var(--grey);
+      transition: color .2s;
+    }
+    .shopItem .info-btn:hover { color: var(--gold); }
+    .shopItem .buy-btn {
+      margin-top: 8px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      border: 2px solid var(--grey);
+      padding: 5px 10px; cursor: pointer;
+      transition: all .2s ease-out;
+    }
+    .shopItem .buy-btn.on  { background:limegreen; color:#000; border-color:limegreen; }
+    .shopItem .buy-btn.off { background:#c00;      color:#fff; border-color:#c00; }
+    #shopBackBtn, #proShopBackBtn, #advancedShopBackBtn {
+      margin:20px; font-size:24px;
+      color:var(--grey); border:2px solid var(--grey);
+      background:none; cursor:pointer;
+      transition:all .2s ease-out;
+    }
+    #shopBackBtn:hover, #proShopBackBtn:hover, #advancedShopBackBtn:hover { color:var(--gold); border-color:var(--gold); }
+
+    /* ===== SHOP SELECT SCREEN ===== */
+    #shopSelectButtons {
+      display:flex; gap:40px; margin-top:60px;
+    }
+    .shopSelectItem {
+      display:flex; flex-direction:column; align-items:center;
+      border:2px solid var(--grey); padding:40px 60px;
+      transition:transform .15s ease-out, border-color .2s;
+    }
+    .shopSelectItem:hover { transform:translateY(-4px); border-color:var(--gold); }
+    .shopSelectItem.locked {
+      opacity:0.5; cursor:default; border-color:var(--grey);
+    }
+    .shopSelectItem.locked:hover { transform:none; border-color:var(--grey); }
+    .enter-btn {
+      margin-top:20px; font-family:'Press Start 2P',monospace;
+      font-size:14px; border:2px solid var(--grey);
+      padding:10px 20px; cursor:pointer; transition:all .2s ease-out;
+    }
+    .enter-btn:hover { color:var(--gold); border-color:var(--gold); }
+    #shopSelectBackBtn {
+      margin:40px; font-size:24px; color:var(--grey);
+      border:2px solid var(--grey); background:none;
+      cursor:pointer; transition:all .2s ease-out;
+    }
+    #shopSelectBackBtn:hover { color:var(--gold); border-color:var(--gold); }
+
+    /* ===== PRO SHOP BACKGROUND ANIMATION ===== */
+    @keyframes bgAnim {
+      0%   { background-position:0 0;   }
+      100% { background-position:200% 0; }
+    }
+    #proShopContainer {
+      background:linear-gradient(270deg,#444,#222,#444,#222,#444);
+      background-size:400% 400%;
+      animation:bgAnim 60s ease-in-out infinite;
+    }
+
+    /* ===== ADVANCED SHOP BACKGROUND ANIMATION (REWORK) ===== */
+    @keyframes advBgAnim {
+      0%   { background-position: 0% 0%; }
+      100% { background-position: 0% 100%; }
+    }
+    #advancedShopContainer {
+      background: linear-gradient(
+        180deg,
+        var(--dark) 0%,
+        #222 25%,
+        #444 50%,
+        #222 75%,
+        var(--dark) 100%
+      );
+      background-size: 200% 200%;
+      animation: advBgAnim 20s ease-in-out infinite alternate;
+    }
+
+    /* ===== INFO MODAL ===== */
+    #infoModal {
+      position:absolute; inset: 0;
+      background: rgba(0,0,0,0.8);
+      display:none; align-items:center; justify-content:center;
+      z-index:5;
+    }
+    #infoModal .modal-content {
+      background: var(--dark); color: #fff;
+      padding: 20px; border:2px solid var(--gold); text-align:center;
+    }
+    #infoModal .modal-content p { margin-bottom:20px; }
+    #infoOkBtn {
+      font-family:'Press Start 2P',monospace;
+      font-size:14px; color:var(--grey);
+      border:2px solid var(--grey); background:none;
+      padding:10px 20px; cursor:pointer; transition:all .2s ease-out;
+    }
+    #infoOkBtn:hover { color:var(--gold); border-color:var(--gold); }
+
+    /* ===== COIN EDIT & ODDS MODAL ===== */
+    #coinMenu {
+      position:absolute; inset:0;
+      background:rgba(0,0,0,0.8);
+      display:none; align-items:center; justify-content:center;
+      z-index:6;
+    }
+    #coinMenu .modal-content{
+      background:var(--dark); color:#fff;
+      padding:20px; border:2px solid var(--gold); text-align:center;
+    }
+    #coinSettingsBtn, #oddsSettingsBtn, #infiniteAutoReverseBtn, #coinCancelBtn {
+      font-family:'Press Start 2P',monospace;
+      font-size:14px; margin:5px; padding:10px 20px;
+      cursor:pointer; border:2px solid var(--grey);
+      background:none; color:var(--grey); transition:all .2s ease-out;
+    }
+    #coinSettingsBtn:hover, #oddsSettingsBtn:hover, #infiniteAutoReverseBtn:hover, #coinCancelBtn:hover {
+      color:var(--gold); border-color:var(--gold);
+    }
+    #coinSettings, #oddsSettings { display:none; margin-top:10px; text-align:center; }
+    #coinSettings input, #oddsSettings input {
+      font-family:'Press Start 2P',monospace;
+      font-size:16px; width:140px; padding:5px; margin:10px 0;
+      text-align:center; background:#000; color:#fff; border:2px solid var(--grey);
+    }
+    #coinSetBtn, #oddsSetBtn {
+      font-family:'Press Start 2P',monospace;
+      font-size:14px; margin-top:10px; padding:10px 20px;
+      cursor:pointer; border:2px solid var(--grey);
+      background:none; color:var(--grey); transition:all .2s ease-out;
+    }
+    #coinSetBtn:hover, #oddsSetBtn:hover {
+      color:var(--gold); border-color:var(--gold);
+    }
+
+    /* ===== ODDS SCREEN ===== */
+    #oddsContainer h2 {
+      margin-top:40px;
+      font-size:48px;
+      color:var(--gold);
+      text-shadow:0 0 6px var(--gold);
+    }
+    .appleRow {
+      margin:20px;
+      font-size:24px;
+      display:flex; align-items:center; gap:12px;
+    }
+    .appleIcon {
+      display:inline-block; border-radius:0;
+    }
+    .appleIcon.normal { background:red; width:40px; height:40px; }
+    .appleIcon.mega   { background:#551A8B; width:40px; height:40px; }
+    .appleIcon.huge   { background:red; width:120px; height:120px; }
+    .appleIcon.hugeMega { background:#551A8B; width:120px; height:120px; }
+    #oddsBackBtn {
+      margin:20px; font-size:24px;
+      color:var(--grey); border:2px solid var(--grey);
+      background:none; cursor:pointer;
+      transition:all .2s ease-out;
+    }
+    #oddsBackBtn:hover { color:var(--gold); border-color:var(--gold); }
+
+    /* ===== GAME AREA ===== */
+    #gameContainer {
+      display:none; position:relative;
+      background: var(--dark); padding:20px; z-index:1;
+    }
+    #gameCanvas {
+      background: var(--black); border:4px solid #fff;
+      width:800px; height:800px;
+      image-rendering:pixelated; display:block;
+    }
+    #scoreDisplay, #coinDisplay, #sizeDisplay {
+      position:absolute; top:-40px; font-size:24px;
+      font-family:'Press Start 2P',monospace;
+    }
+    #scoreDisplay { left:0 }
+    #coinDisplay  { right:0 }
+    #sizeDisplay  { left:50%; transform:translateX(-50%) }
+
+    /* ===== MULTIPLIER TEXT ===== */
+    #multiplierText {
+      position:absolute; bottom:20px; left:50%;
+      transform:translateX(-50%);
+      font-size:32px; color: var(--gold);
+      text-shadow:0 0 4px var(--gold); display:none; z-index:4;
+    }
+
+    /* GAME OVER OVERLAY */
+    #overlay {
+      position:absolute; inset:0;
+      background:#000; opacity:0; visibility:hidden;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      font-size:48px; transition:opacity .2s ease-out; z-index:3;
+    }
+    #overlay.visible { visibility: visible; opacity: 1; }
+    #explodeBonusText {
+      font-size:24px; margin-top:12px; color:red;
+    }
+    #overlay button { margin-top:20px; font-size:24px; padding:10px 20px; cursor:pointer; }
+
+    /* ===== SLOWDOWN & COMBO & SPEED UI ===== */
+    #abilityContainer {
+      position:fixed; left:20px; top:50%;
+      transform:translateY(-50%);
+      pointer-events:none; z-index:2; display:none;
+    }
+    #slowAbilityIcon {
+      width:120px; height:120px;
+      transition:filter .2s;
+    }
+    #slowAbilityIcon.disabled { filter:brightness(50%); }
+    #slowCooldownText {
+      position:absolute; left:0; top:0;
+      width:120px; height:120px;
+      line-height:120px; text-align:center;
+      font-size:48px; color: var(--black);
+    }
+
+    /* SPEED ICON */
+    #speedAbilityWrapper {
+      position:absolute;
+      top:120px;
+      left:0;
+      width:120px; height:120px;
+      pointer-events:none;
+    }
+    #speedAbilityIcon {
+      width:120px; height:120px;
+      border:4px solid #000;
+      position:relative;
+    }
+    #speedFill {
+      position:absolute;
+      left:0; bottom:0;
+      width:100%; height:100%; background:#00f;
+    }
+    #speedStaminaText {
+      position:absolute; bottom:100%;
+      width:120px; text-align:center;
+      font-size:24px; color:#fff;
+      line-height:24px; margin-bottom:8px;
+      pointer-events:none;
+    }
+    #speedStaminaText {
+      top: 0;
+      bottom: auto;
+      margin-bottom: 0;
+      height: 120px;
+      line-height: 120px;
+      z-index: 2;
+      position: absolute;
+      color: #fff;
+      text-shadow: 0 0 4px #000;
+      pointer-events: none;
+    }
+
+    /* COMBO UI */
+    #comboContainer {
+      position:fixed; left:20px;
+      top:calc(50% - 160px);
+      pointer-events:none; z-index:2;
+      display:none;
+    }
+    #comboIcon {
+      width:120px; height:120px;
+    }
+    #comboMultiplierText {
+      position:absolute; left:0; top:0;
+      width:120px; height:120px;
+      line-height:120px; text-align:center;
+      font-size:38px; color:var(--black);
+    }
+    #comboTimerText {
+      position:absolute; left:0; top:-10px;
+      width:120px; text-align:center;
+      font-size:24px; color:#fff;
+    }
+
+    /* REVERSE HEADS UI */
+    #reverseContainer {
+      position:fixed; left:25px;
+      top:calc(50% - 270px);
+      pointer-events:none; z-index:2;
+      display:none;
+    }
+    #reverseIcon {
+      width:110px; height:110px;
+    }
+    #reverseIcon.disabled { filter:brightness(50%); }
+    #reverseCooldownText {
+      position:absolute; left:0; top:0;
+      width:120px; height:120px;
+      line-height:120px; text-align:center;
+      font-size:48px; color:#fff;
+    }
+    @keyframes glowPulse {
+      0%,100% { filter: drop-shadow(0 0 4px var(--gold)); }
+      50%     { filter: drop-shadow(0 0 10px var(--gold)); }
+    }
+    #reverseIcon.glow {
+      animation: glowPulse 1.5s infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Discovered text -->
+  <div id="discoveredText"></div>
+
+  <!-- START SCREEN -->
+  <div id="startScreen">
+    <div id="startText">PRESS ANY KEY TO START</div>
+  </div>
+
+  <!-- BACKGROUND MUSIC -->
+  <audio id="bgMusic"></audio>
+
+  <!-- MAIN MENU -->
+  <div id="menuContainer">
+    <h1 id="gameTitle">Snake Gaem</h1>
+    <img
+      id="menuGif"
+      src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/main/Models/SnakeGaemLoop.gif"
+      alt="Snake Game Loop GIF"
+    />
+    <div id="nav">
+      <span class="navButton selected" id="playBtn">Play</span>
+      <span class="navButton" id="shopBtn">Shop</span>
+      <span class="navButton" id="artifactBtn" style="display:none">Artifacts</span>
+      <span class="navButton" id="oddsBtn" style="display:none">Odds</span>
+      <span class="navButton" id="settingsBtn">Settings</span>
+    </div>
+  </div>
+
+  <!-- SETTINGS SCREEN -->
+  <div id="settingsContainer">
+    <h2>Settings</h2>
+    <div class="setting-item">
+      <span>Music</span>
+      <label class="switch">
+        <input type="checkbox" id="musicToggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-item">
+      <span>Sound Effects</span>
+      <label class="switch">
+        <input type="checkbox" id="sfxToggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-item" id="startScreenSetting">
+      <span>Skip Start Screen (Firefox only)</span>
+      <label class="switch">
+        <input type="checkbox" id="startScreenToggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <button id="settingsBackBtn">Back</button>
+  </div>
+
+  <!-- SHOP SELECT SCREEN -->
+  <div id="shopSelectContainer">
+    <h2>Select Shop</h2>
+    <div id="shopSelectButtons">
+      <div class="shopSelectItem" id="basicShopSelect">
+        <span>Basic Shop</span>
+        <button class="enter-btn" id="basicShopEnterBtn">Enter</button>
+      </div>
+      <div class="shopSelectItem locked" id="proShopSelect">
+        <span>Proficient Shop</span>
+        <button class="enter-btn" id="proShopEnterBtn">Enter</button>
+      </div>
+      <div class="shopSelectItem locked" id="advancedShopSelect">
+        <span>Advanced Shop</span>
+        <button class="enter-btn" id="advancedShopEnterBtn">Enter</button>
+      </div>
+    </div>
+    <button id="shopSelectBackBtn">Back</button>
+  </div>
+
+  <!-- BASIC SHOP SCREEN -->
+  <div id="shopContainer">
+    <h2>Shop</h2>
+    <div id="shopCoinDisplay">Coins: 0</div>
+    <div id="shopItems"></div>
+    <button id="shopBackBtn">Back</button>
+  </div>
+
+  <!-- PROFICIENT SHOP SCREEN -->
+  <div id="proShopContainer">
+    <h2>Proficient Shop</h2>
+    <div id="proShopCoinDisplay">Coins: 0</div>
+    <div id="proShopItems"></div>
+    <button id="proShopBackBtn">Back</button>
+  </div>
+
+  <!-- ADVANCED SHOP SCREEN -->
+  <div id="advancedShopContainer">
+    <h2>Advanced Shop</h2>
+    <div id="advancedShopCoinDisplay">Coins: 0</div>
+    <div id="advancedShopItems"></div>
+    <button id="advancedShopBackBtn">Back</button>
+  </div>
+
+  <!-- ODDS SCREEN -->
+  <div id="oddsContainer">
+    <h2>Odds</h2>
+    <div class="appleRow">
+      <div class="appleIcon normal"></div>
+      <span id="redOddsText">0%</span>
+    </div>
+    <div class="appleRow">
+      <div class="appleIcon mega"></div>
+      <span id="megaOddsText">0%</span>
+    </div>
+    <div class="appleRow">
+      <div class="appleIcon huge"></div>
+      <span id="hugeOddsText">0%</span>
+    </div>
+    <div class="appleRow hugeMegaRow" style="display:none;">
+      <div class="appleIcon hugeMega"></div>
+      <span id="hugeMegaOddsText">0%</span>
+    </div>
+    <button id="oddsBackBtn">Back</button>
+  </div>
+
+  <!-- INFO MODAL -->
+  <div id="infoModal">
+    <div class="modal-content">
+      <p id="infoText"></p>
+      <button id="infoOkBtn">OK</button>
+    </div>
+  </div>
+
+  <!-- COIN EDIT & ODDS MODAL -->
+  <div id="coinMenu">
+    <div class="modal-content">
+      <p>Cheat Menu</p>
+      <button id="coinSettingsBtn">Set Coins</button>
+      <button id="oddsSettingsBtn">Set Odds</button>
+      <button id="infiniteAutoReverseBtn">Infinite Auto-Reverses</button>
+      <button id="coinCancelBtn">Cancel</button>
+
+      <div id="coinSettings" style="display:none;">
+        <p>Set Coins</p>
+        <input id="coinInput" type="number" min="0"/>
+        <br>
+        <button id="coinSetBtn">Apply Coins</button>
+      </div>
+
+      <div id="oddsSettings" style="display:none;">
+        <p>Set Odds</p>
+        <label>Normal Apple %:<input id="normalOddsInput" type="number" min="0" max="100"/></label>
+        <label>Mega Apple %:<input id="megaOddsInput" type="number" min="0" max="100"/></label>
+        <label>Huge Apple %:<input id="hugeOddsInput" type="number" min="0" max="100"/></label>
+        <label>Huge Mega Apple %:<input id="hugeMegaOddsInput" type="number" min="0" max="100"/></label>
+        <br>
+        <button id="oddsSetBtn">Apply Odds</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME AREA -->
+  <div id="gameContainer">
+    <div id="scoreDisplay">Score: 0</div>
+    <div id="sizeDisplay">Size: 1</div>
+    <div id="coinDisplay">Coins: 0</div>
+    <div id="multiplierText"></div>
+    <div id="overlay">
+      <div>Game Over</div>
+      <div id="explodeBonusText"></div>
+      <button id="retryBtn">Retry</button>
+      <button id="mainMenuBtn">Main Menu</button>
+    </div>
+    <canvas id="gameCanvas" width="800" height="800"></canvas>
+  </div>
+
+  <!-- Slowdown, Speed & Cooldown UI -->
+  <div id="abilityContainer">
+    <img
+      id="slowAbilityIcon"
+      src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Icons/Slow%20Icon%20-%20pixelated%20variant.png"
+      alt="Slow Down Icon"
+    />
+    <span id="slowCooldownText"></span>
+
+    <!-- SPEED ICON -->
+    <div id="speedAbilityWrapper">
+      <span id="speedStaminaText">100%</span>
+      <div id="speedAbilityIcon">
+        <div id="speedFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Combo Ability UI -->
+  <div id="comboContainer">
+    <img
+      id="comboIcon"
+      src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Icons/Target%20Icon.png"
+      alt="Combo Icon"
+    />
+    <span id="comboMultiplierText">1x</span>
+    <span id="comboTimerText"></span>
+  </div>
+
+  <!-- Reverse Heads Ability UI -->
+  <div id="reverseContainer">
+    <img
+      id="reverseIcon"
+      src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Icons/Reverse%20Icon%20-%20Pixelated%20Variant.png"
+      alt="Reverse Icon"
+    />
+    <span id="reverseCooldownText"></span>
+  </div>
+
+  <script>
+    // RANDOMIZE BACKGROUND MUSIC BETWEEN TRACKS
+    const bgMusic = document.getElementById('bgMusic');
+    const bgTracks = [
+      'https://github.com/MeltingTitanium/SnakeGaem/raw/refs/heads/main/Background%20Music/level_theme%20by%20tamesu%20on%20OpenGameArt%2Corg.mp3',
+      'https://github.com/MeltingTitanium/SnakeGaem/raw/refs/heads/main/Background%20Music/haunted_graveyard%20by%20Tamesu.mp3',
+      'https://github.com/MeltingTitanium/SnakeGaem/raw/refs/heads/main/Background%20Music/minigame(1)%20by%20Tamesu.mp3',
+      'https://github.com/MeltingTitanium/SnakeGaem/raw/refs/heads/main/Background%20Music/ruskerdax_-_puzzling.mp3'
+    ];
+    let chosenIndex = Math.floor(Math.random() * bgTracks.length);
+    bgMusic.src = bgTracks[chosenIndex];
+    bgMusic.volume = 1;
+    bgMusic.addEventListener('ended', () => {
+      let nextIndex;
+      do {
+        nextIndex = Math.floor(Math.random() * bgTracks.length);
+      } while (nextIndex === chosenIndex);
+      chosenIndex = nextIndex;
+      bgMusic.src = bgTracks[chosenIndex];
+      if (musicEnabled) {
+        bgMusic.play().catch(() => {});
+      }
+    });
+
+    // Firefox detection
+    const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+
+    // Elements
+    const discoveredTextEl     = document.getElementById('discoveredText');
+    const startScreen          = document.getElementById('startScreen');
+    const menuContainer        = document.getElementById('menuContainer');
+    const titleEl              = document.getElementById('gameTitle');
+    const gifEl                = document.getElementById('menuGif');
+    const navEl                = document.getElementById('nav');
+    const startScreenSetting   = document.getElementById('startScreenSetting');
+    const startScreenToggleEl  = document.getElementById('startScreenToggle');
+
+    const settingsContainer    = document.getElementById('settingsContainer');
+    const settingsBtn          = document.getElementById('settingsBtn');
+    const settingsBackBtn      = document.getElementById('settingsBackBtn');
+
+    // Shop select + shop elements
+    const shopSelectContainer   = document.getElementById('shopSelectContainer');
+    const basicShopSelect       = document.getElementById('basicShopSelect');
+    const proShopSelect         = document.getElementById('proShopSelect');
+    const advancedShopSelect    = document.getElementById('advancedShopSelect');
+    const basicShopEnterBtn     = document.getElementById('basicShopEnterBtn');
+    const proShopEnterBtn       = document.getElementById('proShopEnterBtn');
+    const advancedShopEnterBtn  = document.getElementById('advancedShopEnterBtn');
+    const shopSelectBackBtn     = document.getElementById('shopSelectBackBtn');
+
+    const shopContainer        = document.getElementById('shopContainer');
+    const proShopContainer     = document.getElementById('proShopContainer');
+    const advancedShopContainer= document.getElementById('advancedShopContainer');
+    const proShopCoinDisplay   = document.getElementById('proShopCoinDisplay');
+    const advancedShopCoinDisplay = document.getElementById('advancedShopCoinDisplay');
+    const proShopItemsEl       = document.getElementById('proShopItems');
+    const advancedShopItemsEl  = document.getElementById('advancedShopItems');
+    const shopBtn              = document.getElementById('shopBtn');
+    const shopBackBtn          = document.getElementById('shopBackBtn');
+    const proShopBackBtn       = document.getElementById('proShopBackBtn');
+    const advancedShopBackBtn  = document.getElementById('advancedShopBackBtn');
+    const shopCoinDisplay      = document.getElementById('shopCoinDisplay');
+    const shopItemsEl          = document.getElementById('shopItems');
+
+    const oddsContainer        = document.getElementById('oddsContainer');
+    const oddsBtn              = document.getElementById('oddsBtn');
+    const artifactBtn          = document.getElementById('artifactBtn');
+    const oddsBackBtn          = document.getElementById('oddsBackBtn');
+    const redOddsText          = document.getElementById('redOddsText');
+    const megaOddsText         = document.getElementById('megaOddsText');
+    const hugeOddsText         = document.getElementById('hugeOddsText');
+    const hugeMegaOddsText     = document.getElementById('hugeMegaOddsText');
+
+    const infoModal            = document.getElementById('infoModal');
+    const infoText             = document.getElementById('infoText');
+    const infoOkBtn            = document.getElementById('infoOkBtn');
+
+    const gameContainer        = document.getElementById('gameContainer');
+    const scoreEl              = document.getElementById('scoreDisplay');
+    const coinEl               = document.getElementById('coinDisplay');
+    const sizeEl               = document.getElementById('sizeDisplay');
+    const multiplierTextEl     = document.getElementById('multiplierText');
+    const overlay              = document.getElementById('overlay');
+    const explodeBonusEl       = document.getElementById('explodeBonusText');
+    const retryBtn             = document.getElementById('retryBtn');
+    const mainMenuBtn          = document.getElementById('mainMenuBtn');
+
+    const abilityContainer     = document.getElementById('abilityContainer');
+    const slowIconEl           = document.getElementById('slowAbilityIcon');
+    const slowCooldownText     = document.getElementById('slowCooldownText');
+
+    const speedWrapper         = document.getElementById('speedAbilityWrapper');
+    const speedFill            = document.getElementById('speedFill');
+    const speedStaminaText     = document.getElementById('speedStaminaText');
+
+    const reverseContainer     = document.getElementById('reverseContainer');
+    const reverseIcon          = document.getElementById('reverseIcon');
+    const reverseCooldownText  = document.getElementById('reverseCooldownText');
+
+    const coinMenu             = document.getElementById('coinMenu');
+    const coinSettingsBtn      = document.getElementById('coinSettingsBtn');
+    const oddsSettingsBtn      = document.getElementById('oddsSettingsBtn');
+    const infiniteAutoReverseBtn = document.getElementById('infiniteAutoReverseBtn');
+    const coinCancelBtn        = document.getElementById('coinCancelBtn');
+    const coinInput            = document.getElementById('coinInput');
+    const normalOddsInput      = document.getElementById('normalOddsInput');
+    const megaOddsInput        = document.getElementById('megaOddsInput');
+    const hugeOddsInput        = document.getElementById('hugeOddsInput');
+    const hugeMegaOddsInput    = document.getElementById('hugeMegaOddsInput');
+    const coinSetBtn           = document.getElementById('coinSetBtn');
+    const oddsSetBtn           = document.getElementById('oddsSetBtn');
+
+    const comboContainer       = document.getElementById('comboContainer');
+    const comboMultiplierTextEl= document.getElementById('comboMultiplierText');
+    const comboTimerText       = document.getElementById('comboTimerText');
+
+    // Preload audio
+    const deathAudio  = new Audio('https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/main/Sounds%20%26%20Music/Explosion%20by%20Luke.RUSTLTD%20on%20OpenGameArt.ORG.wav');
+    deathAudio.volume = 0.2;
+    const selectAudio = new Audio('https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/main/Sounds%20%26%20Music/Menu%20Select%20-%20made%20by%20Fupi%20on%20OpenGameArt.org.ogg');
+    const coinAudio   = new Audio('https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/main/Sounds%20%26%20Music/coin%20by%20Fupi%20on%20OpenGameArt.org.wav');
+
+    // Settings & state
+    let musicEnabled, sfxEnabled, skipStartScreen;
+    let coins = 0, ownedItems = [];
+    let hasSlowAbility = false,   slowAbilityEnabled   = false;
+    let hasExplodeAbility = false, explodeAbilityEnabled = false;
+    let hasMegaAbility = false, megaAbilityEnabled = false;
+    let hasMegaPlus = false, megaPlusEnabled = false;
+    let hasComboAbility = false, comboAbilityEnabled = false;
+    let hasSpeedAbility = false, speedAbilityEnabled = false;
+    let hasReverseAbility = false, reverseAbilityEnabled = false;
+    let lastReverseTime = Date.now() - 30000;
+    const reverseCooldown = 30000;
+    let invincible = false;
+    let movementLocked = false;
+
+    let hasAutoReverseAbility = false, autoReverseAbilityEnabled = false;
+    let usedAutoReverseThisRound = false;
+    let infiniteAutoReverseEnabled = false;
+    let proShopUnlocked = false;
+    let advancedShopUnlocked = false;
+    let hasHugeApple = false, hugeAppleEnabled = false;
+    let hasHugePlus = false, hugePlusEnabled = false;
+    let hasExplodePlus = false, explodePlusEnabled = false;
+    let hasComboPlus = false, comboPlusEnabled = false;
+    let hasMegaMk2 = false, megaMk2Enabled = false;
+    let hasSpeedPlus = false, speedPlusEnabled = false;
+
+    // NEW: track discovery
+    let hasDiscoveredHugeMegaApple= false;
+
+    const proficientShopItems = [
+      { id:'hugeApple',   name:'Huge Apple', price:500 },
+      { id:'explodePlus', name:'Spontaneous Combustion+', price:250 },
+      { id:'comboPlus',   name:'Combos+', price:750 },
+      { id:'reverse',     name:'Reverse Heads', price:225 },
+      { id:'megaMk2',     name:'Mega Apples Mk2', price:750 },
+      { id:'speedPlus',   name:'Speed+', price:450 }
+    ];
+
+    const shopItems = [
+      { id:'slow',    name:'Slow Down Ability',       price:30 },
+      { id:'explode', name:'Spontaneous Combustion',  price:50 },
+      { id:'mega',    name:'Mega Apples',             price:50 },
+      { id:'combo',   name:'Combos',                  price:75 },
+      { id:'speed',   name:'Speed',                   price:350 }
+    ];
+
+    const advancedShopItems = [
+      { id:'hugePlus', name:'Huge Apples+', price:1250 },
+      { id:'autoReverse', name:'Auto Reverse', price:7500 },
+      { id:'artifacts', name:'Artifacts', price:450 }
+    ];
+
+    function setAbilityVisibility(){
+      abilityContainer.style.display =
+        ((hasSlowAbility && slowAbilityEnabled) || (hasSpeedAbility && speedAbilityEnabled))
+        ? 'block' : 'none';
+      speedWrapper.style.display =
+        (hasSpeedAbility && speedAbilityEnabled) ? 'block' : 'none';
+    }
+
+    let oddsConfig = null;
+
+    function showMainMenu() {
+      setTimeout(() => titleEl.style.opacity = 1,  100);
+      setTimeout(() => gifEl  .style.opacity = 1, 1100);
+      setTimeout(() => navEl  .style.opacity = 1, 1600);
+    }
+
+    window.addEventListener('load', () => {
+      musicEnabled = localStorage.getItem('musicEnabled');
+      musicEnabled = musicEnabled === null ? true : (musicEnabled === 'true');
+      sfxEnabled   = localStorage.getItem('sfxEnabled');
+      sfxEnabled   = sfxEnabled   === null ? true : (sfxEnabled   === 'true');
+      document.getElementById('musicToggle').checked = musicEnabled;
+      document.getElementById('sfxToggle')  .checked = sfxEnabled;
+      bgMusic.volume = 1;
+
+      skipStartScreen = localStorage.getItem('skipStartScreen') === 'true';
+      startScreenToggleEl.checked = skipStartScreen;
+      if (isFirefox) startScreenSetting.style.display = 'flex';
+
+      // Removed the regex check, so ANY key press triggers the start
+      if (!isFirefox || skipStartScreen) {
+        startScreen.style.display = 'none';
+        showMainMenu();
+      } else {
+        function startHandler(e) {
+          window.removeEventListener('keydown', startHandler);
+          startScreen.style.display = 'none';
+          showMainMenu();
+        }
+        window.addEventListener('keydown', startHandler);
+      }
+
+      updateDisplays();
+      setAbilityVisibility();
+    });
+
+    document.getElementById('musicToggle').addEventListener('change', () => {
+      musicEnabled = document.getElementById('musicToggle').checked;
+      localStorage.setItem('musicEnabled', musicEnabled);
+      if (!musicEnabled) bgMusic.pause();
+    });
+    document.getElementById('sfxToggle').addEventListener('change', () => {
+      sfxEnabled = document.getElementById('sfxToggle').checked;
+      localStorage.setItem('sfxEnabled', sfxEnabled);
+    });
+
+    const navBtns     = Array.from(document.querySelectorAll('.navButton'));
+    let selectedIndex = 0;
+    function updateSelection(to, playSound = true) {
+      if (playSound && sfxEnabled) {
+        selectAudio.currentTime = 0;
+        selectAudio.play();
+      }
+      navBtns[selectedIndex].classList.remove('selected');
+      let newIndex = (to + navBtns.length) % navBtns.length;
+      const direction = to > selectedIndex ? 1 : -1;
+      while (getComputedStyle(navBtns[newIndex]).display === 'none') {
+        newIndex = (newIndex + direction + navBtns.length) % navBtns.length;
+      }
+      selectedIndex = newIndex;
+      navBtns[selectedIndex].classList.add('selected');
+    }
+    document.addEventListener('keydown', e => {
+      if (menuContainer.style.display === 'none') return;
+      if (e.code === 'ArrowLeft')  updateSelection(selectedIndex - 1);
+      if (e.code === 'ArrowRight') updateSelection(selectedIndex + 1);
+      if (e.code === 'Enter' || e.code === 'Space') navBtns[selectedIndex].click();
+    });
+    navBtns.forEach((btn, i) => btn.addEventListener('mouseenter', () => updateSelection(i)));
+
+    settingsBtn.addEventListener('click', () => {
+      menuContainer.style.display     = 'none';
+      settingsContainer.style.display = 'flex';
+    });
+    settingsBackBtn.addEventListener('click', () => {
+      settingsContainer.style.display = 'none';
+      menuContainer.style.display     = 'flex';
+    });
+
+    shopBtn.addEventListener('click', () => {
+      menuContainer.style.display = 'none';
+      if (!proShopUnlocked) {
+        shopContainer.style.display = 'flex';
+        updateShop();
+      } else {
+        shopSelectContainer.style.display = 'flex';
+        updateShopSelect();
+      }
+    });
+    shopSelectBackBtn.addEventListener('click', () => {
+      shopSelectContainer.style.display = 'none';
+      menuContainer.style.display = 'flex';
+    });
+    basicShopEnterBtn.addEventListener('click', () => {
+      shopSelectContainer.style.display = 'none';
+      shopContainer.style.display = 'flex';
+      updateShop();
+    });
+    proShopEnterBtn.addEventListener('click', () => {
+      if (!proShopUnlocked) {
+        infoText.textContent = "You haven't unlocked the Proficient Shop yet.";
+        infoModal.style.display = 'flex';
+        return;
+      }
+      shopSelectContainer.style.display = 'none';
+      updateProShop();
+      proShopContainer.style.display = 'flex';
+    });
+    advancedShopEnterBtn.addEventListener('click', () => {
+      if (!advancedShopUnlocked) {
+        infoText.textContent = "You haven't unlocked the Advanced Shop yet.";
+        infoModal.style.display = 'flex';
+        return;
+      }
+      shopSelectContainer.style.display = 'none';
+      updateAdvancedShop();
+      advancedShopContainer.style.display = 'flex';
+    });
+    shopBackBtn.addEventListener('click', () => {
+      shopContainer.style.display = 'none';
+      if (proShopUnlocked) {
+        shopSelectContainer.style.display = 'flex';
+      } else {
+        menuContainer.style.display = 'flex';
+      }
+    });
+    proShopBackBtn.addEventListener('click', () => {
+      proShopContainer.style.display = 'none';
+      shopSelectContainer.style.display = 'flex';
+    });
+    advancedShopBackBtn.addEventListener('click', () => {
+      advancedShopContainer.style.display = 'none';
+      shopSelectContainer.style.display = 'flex';
+    });
+
+    oddsBtn.addEventListener('click', () => {
+      let redPerc, megaPerc, hugePerc, hugeMegaPerc;
+      if (oddsConfig) {
+        const sum = oddsConfig.rawNormal + oddsConfig.rawMega + oddsConfig.rawHuge + oddsConfig.rawHugeMega;
+        redPerc      = oddsConfig.rawNormal   / sum;
+        megaPerc     = oddsConfig.rawMega     / sum;
+        hugePerc     = oddsConfig.rawHuge     / sum;
+        hugeMegaPerc = oddsConfig.rawHugeMega / sum;
+      } else {
+        const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
+        const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
+        const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
+        const megaTotal    = baseMega + bonusMega + mk2Bonus;
+        const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+        let hugeMegaTotal  = 0;
+        if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
+          hugeMegaTotal = 0.001;
+          if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
+        }
+        redPerc      = 1 - megaTotal - hugeTotal - hugeMegaTotal;
+        megaPerc     = megaTotal;
+        hugePerc     = hugeTotal;
+        hugeMegaPerc = hugeMegaTotal;
+      }
+      redOddsText.textContent      = (redPerc * 100).toFixed(1) + '%';
+      megaOddsText.textContent     = (megaPerc * 100).toFixed(1) + '%';
+      hugeOddsText.textContent     = (hugePerc * 100).toFixed(1) + '%';
+      hugeMegaOddsText.textContent = (hugeMegaPerc * 100).toFixed(1) + '%';
+      document.querySelector('.hugeMegaRow').style.display = hasDiscoveredHugeMegaApple ? 'flex' : 'none';
+
+      menuContainer.style.display  = 'none';
+      oddsContainer.style.display  = 'flex';
+    });
+    oddsBackBtn.addEventListener('click', () => {
+      oddsContainer.style.display  = 'none';
+      menuContainer.style.display  = 'flex';
+    });
+    document.getElementById('playBtn').addEventListener('click', () => {
+      menuContainer.style.display = 'none';
+      gameContainer.style.display = 'block';
+      if (musicEnabled) bgMusic.play().catch(() => {});
+      init();
+    });
+    artifactBtn.addEventListener('click', () => {
+      menuContainer.style.display = 'none';
+      infoText.textContent = "Coming soon";
+      infoModal.style.display = 'flex';
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Numpad5') {
+        coinInput.value = coins;
+        if (!oddsConfig) {
+          const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
+          const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
+          const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
+          const megaTotal    = baseMega + bonusMega + mk2Bonus;
+          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          let hugeMegaTotal  = 0;
+          if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
+            hugeMegaTotal = 0.001;
+            if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
+          }
+          normalOddsInput.value    = ((1 - megaTotal - hugeTotal - hugeMegaTotal) * 100).toFixed(1);
+          megaOddsInput.value      = (megaTotal * 100).toFixed(1);
+          hugeOddsInput.value      = (hugeTotal * 100).toFixed(1);
+          hugeMegaOddsInput.value  = (hugeMegaTotal * 100).toFixed(1);
+        } else {
+          normalOddsInput.value    = oddsConfig.rawNormal;
+          megaOddsInput.value      = oddsConfig.rawMega;
+          hugeOddsInput.value      = oddsConfig.rawHuge;
+          hugeMegaOddsInput.value  = oddsConfig.rawHugeMega;
+        }
+        coinMenu.style.display = 'flex';
+        document.getElementById('coinSettings').style.display = 'none';
+        document.getElementById('oddsSettings').style.display = 'block';
+      }
+    });
+
+    coinSettingsBtn.addEventListener('click', () => {
+      document.getElementById('coinSettings').style.display = 'block';
+      document.getElementById('oddsSettings').style.display = 'none';
+    });
+    oddsSettingsBtn.addEventListener('click', () => {
+      document.getElementById('coinSettings').style.display = 'none';
+      document.getElementById('oddsSettings').style.display = 'block';
+    });
+    infiniteAutoReverseBtn.addEventListener('click', () => {
+      infiniteAutoReverseEnabled = !infiniteAutoReverseEnabled;
+      infoText.textContent = infiniteAutoReverseEnabled
+        ? "Infinite Auto-Reverses enabled"
+        : "Infinite Auto-Reverses disabled";
+      infoModal.style.display = 'flex';
+    });
+    coinSetBtn.addEventListener('click', () => {
+      coins = Math.max(0, parseInt(coinInput.value || 0, 10));
+      updateDisplays();
+      updateShop();
+      coinMenu.style.display = 'none';
+    });
+    oddsSetBtn.addEventListener('click', () => {
+      const rawNormal   = parseFloat(normalOddsInput.value)   || 0;
+      const rawMega     = parseFloat(megaOddsInput.value)     || 0;
+      const rawHuge     = parseFloat(hugeOddsInput.value)     || 0;
+      const rawHugeMega = parseFloat(hugeMegaOddsInput.value) || 0;
+      oddsConfig = { rawNormal, rawMega, rawHuge, rawHugeMega };
+      updateDisplays();
+      updateShop();
+      coinMenu.style.display = 'none';
+    });
+    coinCancelBtn.addEventListener('click', () => {
+      coinMenu.style.display = 'none';
+    });
+
+    function updateShopSelect(){
+      if (proShopUnlocked){
+        proShopSelect.classList.remove('locked');
+      } else {
+        proShopSelect.classList.add('locked');
+      }
+      if (advancedShopUnlocked){
+        advancedShopSelect.classList.remove('locked');
+      } else {
+        advancedShopSelect.classList.add('locked');
+      }
+    }
+
+    function updateShop() {
+      shopCoinDisplay.textContent = 'Coins: ' + coins;
+      shopItemsEl.innerHTML = '';
+      shopItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'shopItem';
+        const isOwned = ownedItems.includes(item.id);
+        if (isOwned && !['slow','explode','combo','mega','speed'].includes(item.id)) {
+          div.classList.add('disabled');
+        }
+        let btnText;
+        if (!isOwned) {
+          btnText = 'Buy';
+        } else if (item.id === 'slow') {
+          btnText = slowAbilityEnabled   ? 'ON' : 'OFF';
+        } else if (item.id === 'explode') {
+          btnText = explodeAbilityEnabled ? 'ON' : 'OFF';
+        } else if (item.id === 'mega') {
+          btnText = megaAbilityEnabled   ? 'ON' : 'OFF';
+        } else if (item.id === 'combo') {
+          btnText = comboAbilityEnabled  ? 'ON' : 'OFF';
+        } else if (item.id === 'speed') {
+          btnText = speedAbilityEnabled  ? 'ON' : 'OFF';
+        }
+        div.innerHTML = `
+          <span>${item.name}</span>
+          <span class="price">${item.price}</span>
+          ${btnText ? `<button class="buy-btn">${btnText}</button>` : ''} 
+          <span class="info-btn">?</span>
+        `;
+        const buyBtn  = div.querySelector('.buy-btn');
+        const infoBtn = div.querySelector('.info-btn');
+        if (buyBtn && isOwned && ['slow','explode','combo','mega','speed'].includes(item.id)) {
+          buyBtn.classList.add(
+            ((item.id==='slow'    && slowAbilityEnabled)   ||
+             (item.id==='explode' && explodeAbilityEnabled)||
+             (item.id==='combo'   && comboAbilityEnabled)  ||
+             (item.id==='mega'    && megaAbilityEnabled)   ||
+             (item.id==='speed'   && speedAbilityEnabled))
+            ? 'on' : 'off'
+          );
+        }
+        if (buyBtn) {
+          buyBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!isOwned) {
+              if (coins < item.price) {
+                infoText.textContent = "you don't have enough coins";
+                infoModal.style.display = 'flex';
+                return;
+              }
+              coins -= item.price;
+              ownedItems.push(item.id);
+              if (item.id === 'slow') {
+                hasSlowAbility     = true;
+                slowAbilityEnabled = true;
+              }
+              if (item.id === 'explode') {
+                hasExplodeAbility     = true;
+                explodeAbilityEnabled = true;
+              }
+              if (item.id === 'mega') {
+                hasMegaAbility       = true;
+                megaAbilityEnabled   = true;
+                oddsBtn.style.display = 'inline';
+              }
+              if (item.id === 'combo') {
+                hasComboAbility     = true;
+                comboAbilityEnabled = true;
+              }
+              if (item.id === 'speed') {
+                hasSpeedAbility     = true;
+                speedAbilityEnabled = true;
+              }
+              updateDisplays();
+              updateShop();
+              setAbilityVisibility();
+              return;
+            }
+            if (item.id === 'slow') {
+              slowAbilityEnabled = !slowAbilityEnabled;
+            }
+            if (item.id === 'explode') {
+              explodeAbilityEnabled = !explodeAbilityEnabled;
+            }
+            if (item.id === 'mega') {
+              megaAbilityEnabled = !megaAbilityEnabled;
+              if (!megaAbilityEnabled) {
+                megaPlusEnabled = false;
+                megaMk2Enabled = false;
+              }
+            }
+            if (item.id === 'combo') {
+              comboAbilityEnabled = !comboAbilityEnabled;
+            }
+            if (item.id === 'speed') {
+              speedAbilityEnabled = !speedAbilityEnabled;
+              if (!speedAbilityEnabled) {
+                speedPlusEnabled = false;
+              }
+            }
+            updateShop();
+            setAbilityVisibility();
+          });
+        }
+        infoBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (item.id === 'slow') {
+            infoText.textContent = "Clicking Z slows you down for 3 seconds, cooldown: 30 seconds";
+          }
+          if (item.id === 'explode') {
+            infoText.textContent = "When you click E, you explode to gain extra coins.";
+          }
+          if (item.id === 'mega') {
+            infoText.textContent = "5% base chance your apple will be mega when enabled.";
+          }
+          if (item.id === 'combo') {
+            infoText.textContent = "If you combo apples, you get +1x coin & score multiplier for each apple combo'd. Caps at 5x.";
+          }
+          if (item.id === 'speed') {
+            infoText.textContent = "Hold Space to go faster";
+          }
+          infoModal.style.display = 'flex';
+        });
+        shopItemsEl.appendChild(div);
+      });
+
+      if (hasMegaAbility) {
+        const isPlusOwned = ownedItems.includes('megaPlus');
+        const plusDiv = document.createElement('div');
+        plusDiv.className = 'shopItem';
+        let plusBtnText;
+        if (!isPlusOwned) {
+          plusBtnText = 'Buy';
+        } else {
+          plusBtnText = megaPlusEnabled ? 'ON' : 'OFF';
+        }
+        plusDiv.innerHTML = `
+          <span>Mega Apples+</span>
+          <span class="price">125</span>
+          <button class="buy-btn">${plusBtnText}</button>
+          <span class="info-btn">?</span>
+        `;
+        const buyBtn  = plusDiv.querySelector('.buy-btn');
+        const infoBtn = plusDiv.querySelector('.info-btn');
+        if (!megaAbilityEnabled) {
+          plusDiv.classList.add('disabled');
+          buyBtn.disabled = true;
+        }
+        if (isPlusOwned && buyBtn) {
+          buyBtn.classList.add(megaPlusEnabled ? 'on' : 'off');
+        }
+        if (buyBtn) {
+          buyBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!isPlusOwned) {
+              if (coins < 125) {
+                infoText.textContent = "you don't have enough coins";
+                infoModal.style.display = 'flex';
+                return;
+              }
+              coins -= 125;
+              ownedItems.push('megaPlus');
+              hasMegaPlus = true;
+              megaPlusEnabled = true;
+              oddsBtn.style.display = 'inline';
+              updateDisplays();
+              updateShop();
+            } else {
+              megaPlusEnabled = !megaPlusEnabled;
+              updateShop();
+            }
+          });
+        }
+        infoBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          infoText.textContent = "Increase mega apple odds by 5% when enabled";
+          infoModal.style.display = 'flex';
+        });
+        shopItemsEl.appendChild(plusDiv);
+      }
+
+      const requiredIds = [...shopItems.map(i=>i.id)];
+      if (hasMegaAbility) requiredIds.push('megaPlus');
+      const allOwned = requiredIds.every(id=>ownedItems.includes(id));
+      if (allOwned && !proShopUnlocked) {
+        const proDiv = document.createElement('div');
+        proDiv.className = 'shopItem';
+        proDiv.innerHTML = `
+          <span>Proficient Shop</span>
+          <span class="price">750</span>
+          <button class="buy-btn">Buy</button>
+          <span class="info-btn">?</span>
+        `;
+        const buyBtn = proDiv.querySelector('.buy-btn');
+        const infoBtn = proDiv.querySelector('.info-btn');
+        buyBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (coins < 750) {
+            infoText.textContent = "you don't have enough coins";
+            infoModal.style.display = 'flex';
+            return;
+          }
+          coins -= 750;
+          proShopUnlocked = true;
+          updateDisplays();
+          updateShopSelect();
+          shopContainer.style.display = 'none';
+          shopSelectContainer.style.display = 'flex';
+        });
+        infoBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          infoText.textContent = "Unlocks the Proficient Shop.";
+          infoModal.style.display = 'flex';
+        });
+        shopItemsEl.appendChild(proDiv);
+      }
+
+      const itemsArray = Array.from(shopItemsEl.children);
+      itemsArray.sort((a, b) => {
+        return parseInt(a.querySelector('.price').textContent, 10) - parseInt(b.querySelector('.price').textContent, 10);
+      });
+      shopItemsEl.innerHTML = '';
+      itemsArray.forEach(item => shopItemsEl.appendChild(item));
+
+      setAbilityVisibility();
+    }
+
+    function updateProShop() {
+      proShopCoinDisplay.textContent = 'Coins: ' + coins;
+      proShopItemsEl.innerHTML = '';
+      proficientShopItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'shopItem';
+        const isOwned = ownedItems.includes(item.id);
+
+        if (item.id === 'explodePlus' && !explodeAbilityEnabled) {
+          div.classList.add('disabled');
+        }
+        if (item.id === 'comboPlus' && !comboAbilityEnabled) {
+          div.classList.add('disabled');
+        }
+        if (item.id === 'megaMk2' && !megaAbilityEnabled) {
+          div.classList.add('disabled');
+        }
+        if (item.id === 'speedPlus' && !speedAbilityEnabled) {
+          div.classList.add('disabled');
+        }
+
+        let btnText;
+        if (!isOwned) {
+          btnText = 'Buy';
+        } else {
+          if (item.id === 'hugeApple') {
+            btnText = hugeAppleEnabled ? 'ON' : 'OFF';
+          } else if (item.id === 'explodePlus') {
+            btnText = explodePlusEnabled ? 'ON' : 'OFF';
+          } else if (item.id === 'comboPlus') {
+            btnText = comboPlusEnabled ? 'ON' : 'OFF';
+          } else if (item.id === 'reverse') {
+            btnText = reverseAbilityEnabled ? 'ON' : 'OFF';
+          } else if (item.id === 'megaMk2') {
+            btnText = megaMk2Enabled ? 'ON' : 'OFF';
+          } else if (item.id === 'speedPlus') {
+            btnText = speedPlusEnabled ? 'ON' : 'OFF';
+          }
+        }
+
+        div.innerHTML = `
+          <span>${item.name}</span>
+          <span class="price">${item.price}</span>
+          <button class="buy-btn">${btnText}</button>
+          <span class="info-btn">?</span>
+        `;
+
+        const buyBtn = div.querySelector('.buy-btn');
+        const infoBtn = div.querySelector('.info-btn');
+
+        if (item.id === 'explodePlus' && !explodeAbilityEnabled) {
+          buyBtn.disabled = true;
+        }
+        if (item.id === 'comboPlus' && !comboAbilityEnabled) {
+          buyBtn.disabled = true;
+        }
+        if (item.id === 'megaMk2' && !megaAbilityEnabled) {
+          buyBtn.disabled = true;
+        }
+        if (item.id === 'speedPlus' && !speedAbilityEnabled) {
+          buyBtn.disabled = true;
+        }
+
+        if (isOwned) {
+          if (item.id === 'hugeApple') {
+            buyBtn.classList.add(hugeAppleEnabled ? 'on' : 'off');
+          } else if (item.id === 'explodePlus') {
+            buyBtn.classList.add(explodePlusEnabled ? 'on' : 'off');
+          } else if (item.id === 'comboPlus') {
+            buyBtn.classList.add(comboPlusEnabled ? 'on' : 'off');
+          } else if (item.id === 'reverse') {
+            buyBtn.classList.add(reverseAbilityEnabled ? 'on' : 'off');
+          } else if (item.id === 'megaMk2') {
+            buyBtn.classList.add(megaMk2Enabled ? 'on' : 'off');
+          } else if (item.id === 'speedPlus') {
+            buyBtn.classList.add(speedPlusEnabled ? 'on' : 'off');
+          }
+        }
+
+        buyBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (!isOwned) {
+            if (coins < item.price) {
+              infoText.textContent = "you don't have enough coins";
+              infoModal.style.display = 'flex';
+              return;
+            }
+            coins -= item.price;
+            ownedItems.push(item.id);
+            if (item.id === 'hugeApple') {
+              hasHugeApple = true;
+              hugeAppleEnabled = true;
+            } else if (item.id === 'explodePlus') {
+              hasExplodePlus = true;
+              explodePlusEnabled = true;
+            } else if (item.id === 'comboPlus') {
+              hasComboPlus = true;
+              comboPlusEnabled = true;
+            } else if (item.id === 'reverse') {
+              hasReverseAbility = true;
+              reverseAbilityEnabled = true;
+            } else if (item.id === 'megaMk2') {
+              hasMegaMk2 = true;
+              megaMk2Enabled = true;
+            } else if (item.id === 'speedPlus') {
+              hasSpeedPlus = true;
+              speedPlusEnabled = true;
+            }
+            updateDisplays();
+            updateProShop();
+          } else {
+            if (item.id === 'hugeApple') {
+              hugeAppleEnabled = !hugeAppleEnabled;
+            } else if (item.id === 'explodePlus') {
+              explodePlusEnabled = !explodePlusEnabled;
+              if (explodePlusEnabled) {
+                hasExplodeAbility = true;
+                explodeAbilityEnabled = true;
+              }
+            } else if (item.id === 'comboPlus') {
+              comboPlusEnabled = !comboPlusEnabled;
+            } else if (item.id === 'reverse') {
+              reverseAbilityEnabled = !reverseAbilityEnabled;
+            } else if (item.id === 'megaMk2') {
+              megaMk2Enabled = !megaMk2Enabled;
+            } else if (item.id === 'speedPlus') {
+              speedPlusEnabled = !speedPlusEnabled;
+            }
+            if (item.id === 'hugeApple') {
+              buyBtn.textContent = hugeAppleEnabled ? 'ON' : 'OFF';
+              buyBtn.classList.toggle('on', hugeAppleEnabled);
+              buyBtn.classList.toggle('off', !hugeAppleEnabled);
+            } else if (item.id === 'explodePlus') {
+              buyBtn.textContent = explodePlusEnabled ? 'ON' : 'OFF';
+              buyBtn.classList.toggle('on', explodePlusEnabled);
+              buyBtn.classList.toggle('off', !explodePlusEnabled);
+            } else if (item.id === 'comboPlus') {
+              buyBtn.textContent = comboPlusEnabled ? 'ON' : 'OFF';
+              buyBtn.classList.toggle('on', comboPlusEnabled);
+              buyBtn.classList.toggle('off', !comboPlusEnabled);
+            } else if (item.id === 'reverse') {
+              buyBtn.textContent = reverseAbilityEnabled ? 'ON' : 'OFF';
+              buyBtn.classList.toggle('on', reverseAbilityEnabled);
+              buyBtn.classList.toggle('off', !reverseAbilityEnabled);
+            } else if (item.id === 'megaMk2') {
+              buyBtn.textContent = megaMk2Enabled ? 'ON' : 'OFF';
+              buyBtn.classList.toggle('on', megaMk2Enabled);
+              buyBtn.classList.toggle('off', !megaMk2Enabled);
+            } else if (item.id === 'speedPlus') {
+              buyBtn.textContent = speedPlusEnabled ? 'ON' : 'OFF';
+              buyBtn.classList.toggle('on', speedPlusEnabled);
+              buyBtn.classList.toggle('off', !speedPlusEnabled);
+            }
+          }
+        });
+
+        infoBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (item.id === 'hugeApple') {
+            infoText.textContent = "1% chance to spawn a huge apple";
+          } else if (item.id === 'explodePlus') {
+            infoText.textContent = "More spontaneous combustion coins";
+          } else if (item.id === 'comboPlus') {
+            infoText.textContent = "+2x multiplier and +.50 seconds for combos.";
+          } else if (item.id === 'reverse') {
+            infoText.textContent = "Press R to switch heads; cooldown: 30 seconds";
+          } else if (item.id === 'megaMk2') {
+            infoText.textContent = "+10% chance of a mega apple.";
+          } else if (item.id === 'speedPlus') {
+            infoText.textContent = "Slower drain on stamina";
+          }
+          infoModal.style.display = 'flex';
+        });
+
+        proShopItemsEl.appendChild(div);
+      });
+
+      const requiredProIds = proficientShopItems.map(i => i.id);
+      const allProOwned2 = requiredProIds.every(id => ownedItems.includes(id));
+      if (allProOwned2 && !advancedShopUnlocked) {
+        const advDiv = document.createElement('div');
+        advDiv.className = 'shopItem';
+        advDiv.innerHTML = `
+          <span>Advanced Shop</span>
+          <span class="price">4000</span>
+          <button class="buy-btn">Buy</button>
+          <span class="info-btn">?</span>
+        `;
+        const buyBtn = advDiv.querySelector('.buy-btn');
+        const infoBtn = advDiv.querySelector('.info-btn');
+        buyBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (coins < 4000) {
+            infoText.textContent = "you don't have enough coins";
+            infoModal.style.display = 'flex';
+            return;
+          }
+          coins -= 4000;
+          advancedShopUnlocked = true;
+          updateDisplays();
+          updateShopSelect();
+          proShopContainer.style.display = 'none';
+          shopSelectContainer.style.display = 'flex';
+        });
+        infoBtn.addEventListener('click', e => {
+          infoText.textContent = "Unlocks the Advanced Shop.";
+          infoModal.style.display = 'flex';
+        });
+        proShopItemsEl.appendChild(advDiv);
+      }
+
+      const proItemsArray = Array.from(proShopItemsEl.children);
+      proItemsArray.sort((a, b) =>
+        parseInt(a.querySelector('.price').textContent, 10) - parseInt(b.querySelector('.price').textContent, 10)
+      );
+      proShopItemsEl.innerHTML = '';
+      proItemsArray.forEach(item => proShopItemsEl.appendChild(item));
+
+      setAbilityVisibility();
+    }
+
+    function updateAdvancedShop() {
+      advancedShopCoinDisplay.textContent = 'Coins: ' + coins;
+      advancedShopItemsEl.innerHTML = '';
+      advancedShopItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'shopItem';
+        const isOwned = ownedItems.includes(item.id);
+
+        let btnText;
+        if (!isOwned) {
+          btnText = 'Buy';
+        } else {
+          if (item.id === 'hugePlus') {
+            btnText = hugePlusEnabled ? 'ON' : 'OFF';
+          } else if (item.id === 'autoReverse') {
+            btnText = autoReverseAbilityEnabled ? 'ON' : 'OFF';
+          } else if (item.id === 'artifacts') {
+            btnText = 'Owned';
+          }
+        }
+
+        div.innerHTML = `
+          <span>${item.name}</span>
+          <span class="price">${item.price}</span>
+          <button class="buy-btn">${btnText}</button>
+          <span class="info-btn">?</span>
+        `;
+        const buyBtn = div.querySelector('.buy-btn');
+        const infoBtn = div.querySelector('.info-btn');
+
+        if (isOwned) {
+          if (item.id === 'hugePlus') {
+            buyBtn.classList.add(hugePlusEnabled ? 'on' : 'off');
+          } else if (item.id === 'autoReverse') {
+            buyBtn.classList.add(autoReverseAbilityEnabled ? 'on' : 'off');
+          } else if (item.id === 'artifacts') {
+            buyBtn.disabled = true;
+          }
+        }
+
+        buyBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (!isOwned) {
+            if (coins < item.price) {
+              infoText.textContent = "you don't have enough coins";
+              infoModal.style.display = 'flex';
+              return;
+            }
+            coins -= item.price;
+            ownedItems.push(item.id);
+            if (item.id === 'hugePlus') {
+              hasHugePlus = true;
+              hugePlusEnabled = true;
+            } else if (item.id === 'autoReverse') {
+              hasAutoReverseAbility = true;
+              autoReverseAbilityEnabled = true;
+            } else if (item.id === 'artifacts') {
+              artifactBtn.style.display = 'inline';
+            }
+            updateDisplays();
+            updateAdvancedShop();
+          } else {
+            if (item.id === 'hugePlus') {
+              hugePlusEnabled = !hugePlusEnabled;
+              buyBtn.textContent = hugePlusEnabled ? 'ON' : 'OFF';
+              buyBtn.classList.toggle('on', hugePlusEnabled);
+              buyBtn.classList.toggle('off', !hugePlusEnabled);
+            } else if (item.id === 'autoReverse') {
+              autoReverseAbilityEnabled = !autoReverseAbilityEnabled;
+              buyBtn.textContent = autoReverseAbilityEnabled ? 'ON' : 'OFF';
+              buyBtn.classList.toggle('on', autoReverseAbilityEnabled);
+              buyBtn.classList.toggle('off', !autoReverseAbilityEnabled);
+            } else if (item.id === 'artifacts') {
+              return;
+            }
+          }
+        });
+
+        infoBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (item.id === 'hugePlus') {
+            infoText.textContent = "Boosts huge-mega apple odds by 0.2% when enabled.";
+          } else if (item.id === 'autoReverse') {
+            infoText.textContent = "One time use per round, before you die. You will automatically switch heads.";
+          } else if (item.id === 'artifacts') {
+            infoText.textContent = "Coming soon";
+          }
+          infoModal.style.display = 'flex';
+        });
+
+        advancedShopItemsEl.appendChild(div);
+      });
+      const advItemsArray = Array.from(advancedShopItemsEl.children);
+      advItemsArray.sort((a,b) =>
+        parseInt(a.querySelector('.price').textContent,10) - parseInt(b.querySelector('.price').textContent,10)
+      );
+      advancedShopItemsEl.innerHTML = '';
+      advItemsArray.forEach(item => advancedShopItemsEl.appendChild(item));
+      setAbilityVisibility();
+    }
+
+    infoOkBtn.addEventListener('click', () => infoModal.style.display = 'none');
+
+    let multiplier = 1, nextThresholdIndex = 0;
+    const coinThresholds = [
+      {score:25,   mult:2},
+      {score:50,   mult:3},
+      {score:100,  mult:4},
+      {score:150, mult:5},
+      {score:200, mult:6},
+      {score:300, mult:7},
+      {score:450, mult:8},
+      {score:750, mult:9},
+      {score:1000, mult:10},
+      {score:1500, mult:12},
+      {score:2000, mult:14},
+      {score:2500, mult:17},
+      {score:3000, mult:20}
+    ];
+    function showMultiplierText(mult) {
+      multiplierTextEl.textContent   = mult + 'x coins';
+      multiplierTextEl.style.display = 'block';
+      setTimeout(() => {
+        multiplierTextEl.style.display = 'none';
+        multiplier = mult;
+      }, 3000);
+    }
+
+    let comboCount = 0;
+    let comboMultiplier = 1;
+    let comboEndTime = 0;
+    const comboDuration = 2500;
+
+    const sprintSpeed = 17;
+    const speed = 12;
+    let slowdownActive = false;
+
+    let stamina = 100;
+    let sprintKeyDown = false;
+    let sprinting = false;
+    let exhaustedUntil = 0;
+
+    const canvas   = document.getElementById('gameCanvas');
+    const ctx      = canvas.getContext('2d');
+    const tileSize = 40;
+    const cols     = canvas.width / tileSize;
+    const rows     = canvas.height / tileSize;
+    let currentSpeed = speed;
+    let moveInterval = 1000 / currentSpeed;
+
+    let snake, dir, nextDir, apple, prevSnake, particles;
+    let gameOver, score, lastTime, accumulator;
+
+    function updateCurrentSpeed() {
+      if (slowdownActive) {
+        currentSpeed = speed / 2;
+      } else if (sprinting) {
+        currentSpeed = sprintSpeed;
+      } else {
+        currentSpeed = speed;
+      }
+      moveInterval = 1000 / currentSpeed;
+    }
+
+    function init() {
+      snake      = [{x:5,y:5}];
+      prevSnake  = snake.map(s=>({...s}));
+      dir        = nextDir = {x:1,y:0};
+      apple      = randomApple();
+      particles  = [];
+      gameOver   = false;
+      score      = 0;
+      multiplier = 1;
+      comboCount = 0;
+      comboMultiplier = 1;
+      comboEndTime = 0;
+      nextThresholdIndex = 0;
+      explodeBonusEl.textContent = '';
+
+      stamina = 100;
+      sprintKeyDown = false;
+      sprinting = false;
+      exhaustedUntil = 0;
+
+      lastSlowTime = Date.now() - 30000;
+      slowdownActive = false;
+      updateCurrentSpeed();
+
+      lastReverseTime = Date.now() - reverseCooldown;
+      invincible = false;
+      movementLocked = false;
+
+      usedAutoReverseThisRound = false;
+
+      setAbilityVisibility();
+
+      overlay.classList.remove('visible');
+      lastTime = 0; accumulator = 0;
+      updateDisplays();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function updateDisplays() {
+      scoreEl.textContent = 'Score: ' + score;
+      sizeEl.textContent  = 'Size: ' + snake.length;
+      coinEl.textContent  = 'Coins: ' + coins;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (gameOver || menuContainer.style.display !== 'none') return;
+      if (e.code === 'ArrowUp'    && dir.y !==  1) nextDir = {x:0,y:-1};
+      if (e.code === 'ArrowDown'  && dir.y !== -1) nextDir = {x:0,y: 1};
+      if (e.code === 'ArrowLeft'  && dir.x !==  1) nextDir = {x:-1,y:0};
+      if (e.code === 'ArrowRight' && dir.x !== -1) nextDir = {x:1,y:0};
+      if (e.code === 'KeyZ' &&
+          hasSlowAbility && slowAbilityEnabled) {
+        const now = Date.now();
+        if (now - lastSlowTime >= 30000) {
+          activateSlow();
+          lastSlowTime = now;
+        }
+      }
+      if (e.code === 'KeyE' &&
+          hasExplodeAbility && explodeAbilityEnabled) {
+        triggerExplosion();
+      }
+      if (e.code === 'ShiftLeft') sprintKeyDown = true;
+      if (e.code === 'KeyR' &&
+          hasReverseAbility && reverseAbilityEnabled) {
+        const now = Date.now();
+        if (now - lastReverseTime >= reverseCooldown) {
+          activateReverse();
+        }
+      }
+    });
+    document.addEventListener('keyup', e => {
+      if (e.code === 'ShiftLeft') sprintKeyDown = false;
+    });
+
+    retryBtn.addEventListener('click', init);
+    mainMenuBtn.addEventListener('click', () => {
+      overlay.classList.remove('visible');
+      gameContainer.style.display = 'none';
+      menuContainer.style.display = 'flex';
+    });
+
+    function randomApple() {
+      let p;
+      let type;
+      let rawNormal, rawMega, rawHuge, rawHugeMega;
+      if (oddsConfig) {
+        rawNormal   = oddsConfig.rawNormal;
+        rawMega     = oddsConfig.rawMega;
+        rawHuge     = oddsConfig.rawHuge;
+        rawHugeMega = oddsConfig.rawHugeMega;
+      } else {
+        const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
+        const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
+        const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
+        const megaTotal    = baseMega + bonusMega + mk2Bonus;
+        const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+        let hugeMegaTotal  = 0;
+        if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
+          hugeMegaTotal = 0.001;
+          if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
+        }
+        rawMega     = megaTotal    * 100;
+        rawHuge     = hugeTotal    * 100;
+        rawHugeMega = hugeMegaTotal * 100;
+        rawNormal   = 100 - rawMega - rawHuge - rawHugeMega;
+      }
+      const sumRaw = rawNormal + rawMega + rawHuge + rawHugeMega;
+      const r = Math.random() * sumRaw;
+      if (r < rawHugeMega) {
+        type = 'hugeMega';
+      } else if (r < rawHugeMega + rawHuge) {
+        type = 'huge';
+      } else if (r < rawHugeMega + rawHuge + rawMega) {
+        type = 'mega';
+      } else {
+        type = 'normal';
+      }
+      while (true) {
+        if (type === 'huge' || type === 'hugeMega') {
+          p = {
+            x: Math.floor(Math.random() * (cols - 2)),
+            y: Math.floor(Math.random() * (rows - 2))
+          };
+        } else {
+          p = {
+            x: Math.floor(Math.random() * cols),
+            y: Math.floor(Math.random() * rows)
+          };
+        }
+        if (!snake.some(s => s.x === p.x && s.y === p.y)) break;
+      }
+      return { x: p.x, y: p.y, type: type };
+    }
+
+    function gameLoop(t) {
+      if (!lastTime) lastTime = t;
+      accumulator += t - lastTime;
+      lastTime = t;
+      while (accumulator >= moveInterval) {
+        update(); accumulator -= moveInterval;
+      }
+      draw();
+      if (!gameOver) requestAnimationFrame(gameLoop);
+    }
+
+    function update() {
+      if (movementLocked) return;
+
+      prevSnake = snake.map(s=>({...s}));
+      dir = nextDir;
+      const head = { x: snake[0].x+dir.x, y: snake[0].y+dir.y };
+      const collision = (
+        head.x < 0 || head.x >= cols ||
+        head.y < 0 || head.y >= rows ||
+        snake.some(s=>s.x===head.x&&s.y===head.y)
+      );
+      if (collision) {
+        if (!invincible) {
+          if (hasAutoReverseAbility && autoReverseAbilityEnabled &&
+              (infiniteAutoReverseEnabled || !usedAutoReverseThisRound)) {
+            activateReverse();
+            if (!infiniteAutoReverseEnabled) usedAutoReverseThisRound = true;
+            return;
+          }
+          return triggerDeath();
+        }
+      }
+
+      snake.unshift(head);
+
+      let ate = false;
+      if (apple.type === 'huge' || apple.type === 'hugeMega') {
+        if (
+          head.x >= apple.x && head.x < apple.x + 3 &&
+          head.y >= apple.y && head.y < apple.y + 3
+        ) {
+          ate = true;
+        }
+      } else {
+        if (head.x === apple.x && head.y === apple.y) ate = true;
+      }
+
+      if (ate) {
+        if (hasComboAbility && comboAbilityEnabled) {
+          const now = Date.now();
+          const maxCombo = (hasComboPlus && comboPlusEnabled) ? 7 : 5;
+          const duration = (hasComboPlus && comboPlusEnabled) ? comboDuration + 500 : comboDuration;
+          if (now < comboEndTime) {
+            comboCount = Math.min(comboCount + 1, maxCombo);
+          } else {
+            comboCount = 1;
+          }
+          comboMultiplier = comboCount;
+          comboEndTime = now + duration;
+        } else {
+          comboMultiplier = 1;
+        }
+
+        let baseScoreInc, baseCoinInc;
+        if (apple.type === 'hugeMega') {
+          if (!hasDiscoveredHugeMegaApple) {
+            hasDiscoveredHugeMegaApple = true;
+            discoveredTextEl.textContent = 'Huge Mega Apples Discovered';
+            setTimeout(() => {
+              discoveredTextEl.textContent = '';
+            }, 5000);
+          }
+          for (let i = 0; i < 8; i++) {
+            snake.push({...snake[snake.length-1]});
+          }
+          baseScoreInc = 250;
+          baseCoinInc  = 250;
+        } else if (apple.type === 'huge') {
+          for (let i = 0; i < 5; i++) {
+            snake.push({...snake[snake.length-1]});
+          }
+          baseScoreInc = 35;
+          baseCoinInc  = 50;
+        } else if (apple.type === 'mega') {
+          for (let i = 0; i < 2; i++) snake.push({...snake[snake.length-1]});
+          baseScoreInc = 10;
+          baseCoinInc  = 10;
+        } else {
+          baseScoreInc = 1;
+          baseCoinInc  = 1;
+        }
+
+        const totalScoreInc = baseScoreInc * comboMultiplier;
+        const totalCoinInc  = baseCoinInc * multiplier * comboMultiplier;
+
+        score += totalScoreInc;
+        coins += totalCoinInc;
+
+        while (nextThresholdIndex < coinThresholds.length &&
+               score > coinThresholds[nextThresholdIndex].score) {
+          showMultiplierText(coinThresholds[nextThresholdIndex].mult);
+          nextThresholdIndex++;
+        }
+        apple = randomApple();
+        updateDisplays();
+        if (sfxEnabled) {
+          coinAudio.currentTime = 0;
+          coinAudio.play();
+        }
+      } else {
+        snake.pop();
+      }
+    }
+
+    function triggerDeath() {
+      gameOver = true;
+      explodeBonusEl.textContent = '';
+      const total = snake.length;
+      let totalTime = total >= 50 ? 5000
+                    : total >= 40 ? 3000
+                    : total >= 20 ? 2000
+                    : total >= 10 ? 1000
+                    : 500;
+      const interval = totalTime / total;
+      let removed = 0;
+      const deathAnim = setInterval(() => {
+        if (snake.length) {
+          const seg = snake.pop();
+          particles.push(...createParticles(seg));
+          if (sfxEnabled) {
+            const sound = new Audio(deathAudio.src);
+            sound.volume = deathAudio.volume;
+            sound.play();
+          }
+        }
+        removed++; draw();
+        if (removed >= total) {
+          clearInterval(deathAnim);
+          overlay.classList.add('visible');
+        }
+      }, interval);
+    }
+
+    function triggerExplosion() {
+      if (gameOver) return;
+      gameOver = true;
+      const baseBonusCoins = Math.floor(snake.length / 5);
+      let bonusCoins = baseBonusCoins;
+      if (hasExplodePlus && explodePlusEnabled) {
+        bonusCoins += Math.floor(score / 3);
+      }
+      coins += bonusCoins;
+      updateDisplays();
+      explodeBonusEl.textContent = `You got an extra ${bonusCoins} coins`;
+      snake.forEach(seg => particles.push(...createParticles(seg)));
+      if (sfxEnabled) {
+        deathAudio.currentTime = 0;
+        deathAudio.play();
+      }
+      snake = [];
+      draw();
+      overlay.classList.add('visible');
+    }
+
+    function activateSlow() {
+      slowdownActive = true;
+      updateCurrentSpeed();
+      setTimeout(() => {
+        slowdownActive = false;
+        updateCurrentSpeed();
+      }, 3000);
+    }
+
+    function activateReverse() {
+      snake.reverse();
+      dir = { x: -dir.x, y: -dir.y };
+      nextDir = { ...dir };
+      lastReverseTime = Date.now();
+      invincible = true;
+      setTimeout(() => { invincible = false; }, 250);
+    }
+
+    function createParticles(seg) {
+      const out = [];
+      for (let i=0; i<8; i++) {
+        out.push({
+          x: seg.x*tileSize + tileSize/2,
+          y: seg.y*tileSize + tileSize/2,
+          size: Math.random()+1,
+          vx: (Math.random()-0.5)*48,
+          vy: (Math.random()-0.5)*48,
+          alpha: 1
+        });
+      }
+      return out;
+    }
+
+    function updateParticles() {
+      for (let i=particles.length-1; i>=0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy + 2; p.alpha -= 0.06;
+        if (p.alpha<=0||p.x<0||p.x>canvas.width||p.y<0||p.y>canvas.height) {
+          particles.splice(i,1);
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if (apple.type === 'huge' || apple.type === 'hugeMega') {
+        ctx.fillStyle = (apple.type==='huge') ? 'red' : '#551A8B';
+        ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize*3, tileSize*3);
+      } else {
+        ctx.fillStyle = (apple.type==='mega') ? '#551A8B' : 'red';
+        ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
+      }
+      const t = accumulator / moveInterval;
+      ctx.fillStyle = '#006400';
+      for (let i=0; i<snake.length; i++) {
+        const s = prevSnake[i]||snake[i], e = snake[i];
+        const x = (s.x*(1-t)+e.x*t)*tileSize;
+        const y = (s.y*(1-t)+e.y*t)*tileSize;
+        ctx.fillRect(x,y,tileSize,tileSize);
+      }
+      updateParticles();
+      particles.forEach(p => {
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,2*Math.PI);
+        ctx.fillStyle = 'limegreen'; ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    let lastSlowTime = Date.now() - 30000;
+    function updateCooldownUI() {
+      const now = Date.now();
+
+      if (!hasSlowAbility || !slowAbilityEnabled) {
+        slowIconEl.style.display = 'none';
+      } else {
+        slowIconEl.style.display = 'block';
+        const elapsed = now - lastSlowTime;
+        if (elapsed < 30000) {
+          slowIconEl.classList.add('disabled');
+          const remaining = Math.ceil((30000 - elapsed) / 1000);
+          slowCooldownText.textContent = remaining > 0 ? remaining : '';
+        } else {
+          slowIconEl.classList.remove('disabled');
+          slowCooldownText.textContent = '';
+        }
+      }
+
+      if (!hasSpeedAbility || !speedAbilityEnabled) {
+        speedWrapper.style.display = 'none';
+      } else {
+        speedWrapper.style.display = 'block';
+        const exhausted = now < exhaustedUntil;
+
+        const newSprinting = sprintKeyDown && !exhausted && stamina > 0;
+        if (newSprinting !== sprinting) {
+          sprinting = newSprinting;
+          updateCurrentSpeed();
+        }
+
+        if (sprinting) {
+          const drainAmount = (hasSpeedPlus && speedPlusEnabled) ? 0.7 : 1;
+          stamina = Math.max(0, stamina - drainAmount);
+          if (stamina === 0) {
+            exhaustedUntil = now + 20000;
+            sprinting = false;
+            updateCurrentSpeed();
+          }
+        } else {
+          stamina = Math.min(100, stamina + 0.5);
+        }
+
+        speedStaminaText.textContent = Math.round(stamina) + '%';
+        speedFill.style.height = stamina + '%';
+        speedFill.style.background = exhausted ? '#f00' : '#00f';
+      }
+
+      if (!hasReverseAbility || !reverseAbilityEnabled) {
+        reverseContainer.style.display = 'none';
+      } else {
+        reverseContainer.style.display = 'block';
+        const elapsed = now - lastReverseTime;
+        if (elapsed < reverseCooldown) {
+          reverseIcon.classList.add('disabled');
+          const remaining = Math.ceil((reverseCooldown - elapsed) / 1000);
+          reverseCooldownText.textContent = remaining > 0 ? remaining : '';
+        } else {
+          reverseIcon.classList.remove('disabled');
+          reverseCooldownText.textContent = '';
+        }
+      }
+
+      if (hasAutoReverseAbility && autoReverseAbilityEnabled && !usedAutoReverseThisRound) {
+        reverseIcon.classList.add('glow');
+      } else {
+        reverseIcon.classList.remove('glow');
+      }
+
+      if (!hasComboAbility || !comboAbilityEnabled) {
+        comboContainer.style.display = 'none';
+      } else {
+        comboContainer.style.display = 'block';
+        comboMultiplierTextEl.textContent = comboMultiplier + 'x';
+        const remaining = comboEndTime - now;
+        if (remaining > 0) {
+          comboTimerText.textContent = (remaining/1000).toFixed(1);
+        } else {
+          comboTimerText.textContent = '';
+          comboCount = 0;
+          comboMultiplier = 1;
+        }
+      }
+    }
+    setInterval(updateCooldownUI, 100);
+  </script>
+</body>
+</html>
