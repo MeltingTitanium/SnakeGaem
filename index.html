@@ -824,6 +824,7 @@
       const goldenSnailToggleBtn     = document.getElementById('goldenSnailToggle');
       const goldenSnailInfoBtn       = document.getElementById('goldenSnailInfo');
       const goldenSnailOddsText      = document.getElementById('goldenSnailOddsText');
+      const goldenSnailOdds          = document.getElementById('goldenSnailOdds');
       const oddsBackBtn          = document.getElementById('oddsBackBtn');
       const redOddsText          = document.getElementById('redOddsText');
     const megaOddsText         = document.getElementById('megaOddsText');
@@ -907,7 +908,8 @@
     let hasMegaMk2 = false, megaMk2Enabled = false;
       let hasSpeedPlus = false, speedPlusEnabled = false;
       let hasArtifactsFeature = false;
-      let goldenSnailEnabled = false;
+      let goldenSnailEnabled = false; // searching or ability toggle
+      let goldenSnailUnlocked = false;
 
     // NEW: track discovery
     let hasDiscoveredHugeMegaApple= false;
@@ -936,8 +938,10 @@
     ];
 
     function setAbilityVisibility(){
+      const showSlow = (!goldenSnailUnlocked && hasSlowAbility && slowAbilityEnabled);
+      const showSnail = (goldenSnailUnlocked && goldenSnailEnabled);
       abilityContainer.style.display =
-        ((hasSlowAbility && slowAbilityEnabled) || (hasSpeedAbility && speedAbilityEnabled))
+        (showSlow || showSnail || (hasSpeedAbility && speedAbilityEnabled))
         ? 'block' : 'none';
       speedWrapper.style.display =
         (hasSpeedAbility && speedAbilityEnabled) ? 'block' : 'none';
@@ -979,6 +983,7 @@
 
       updateDisplays();
       setAbilityVisibility();
+      updateGoldenSnailToggle();
     });
 
     document.getElementById('musicToggle').addEventListener('change', () => {
@@ -1089,7 +1094,7 @@
           const rawHuge   = oddsConfig.rawHuge;
           const rawHugeMega = oddsConfig.rawHugeMega;
           let rawGoldenSnail = 0;
-          if (goldenSnailEnabled) {
+          if (goldenSnailEnabled && !goldenSnailUnlocked) {
             rawNormal = Math.max(0, rawNormal - 2);
             rawGoldenSnail = 2;
           }
@@ -1104,13 +1109,15 @@
           const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
           const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
           const megaTotal    = baseMega + bonusMega + mk2Bonus;
-          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)
+                               ? 0.01 + ((hasHugePlus && hugePlusEnabled) ? 0.02 : 0)
+                               : 0;
           let hugeMegaTotal  = 0;
           if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
             hugeMegaTotal = 0.001;
             if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
           }
-          const goldenSnailTotal = goldenSnailEnabled ? 0.02 : 0;
+          const goldenSnailTotal = (goldenSnailEnabled && !goldenSnailUnlocked) ? 0.02 : 0;
           redPerc      = 1 - megaTotal - hugeTotal - hugeMegaTotal - goldenSnailTotal;
           megaPerc     = megaTotal;
           hugePerc     = hugeTotal;
@@ -1146,12 +1153,20 @@
         artifactContainer.style.display = 'none';
         menuContainer.style.display = 'flex';
       });
+      function updateGoldenSnailToggle(){
+        if (goldenSnailUnlocked) {
+          goldenSnailToggleBtn.textContent = goldenSnailEnabled ? 'ON' : 'OFF';
+          goldenSnailToggleBtn.classList.toggle('on', goldenSnailEnabled);
+          goldenSnailToggleBtn.classList.toggle('off', !goldenSnailEnabled);
+        } else {
+          goldenSnailToggleBtn.textContent = goldenSnailEnabled ? 'Searching' : 'Not Searching';
+          goldenSnailToggleBtn.classList.remove('on','off');
+        }
+      }
       goldenSnailToggleBtn.addEventListener('click', e => {
         e.stopPropagation();
         goldenSnailEnabled = !goldenSnailEnabled;
-        goldenSnailToggleBtn.textContent = goldenSnailEnabled ? 'ON' : 'OFF';
-        goldenSnailToggleBtn.classList.toggle('on', goldenSnailEnabled);
-        goldenSnailToggleBtn.classList.toggle('off', !goldenSnailEnabled);
+        updateGoldenSnailToggle();
       });
       goldenSnailInfoBtn.addEventListener('click', e => {
         e.stopPropagation();
@@ -1167,7 +1182,9 @@
           const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
           const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
           const megaTotal    = baseMega + bonusMega + mk2Bonus;
-          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)
+                               ? 0.01 + ((hasHugePlus && hugePlusEnabled) ? 0.02 : 0)
+                               : 0;
           let hugeMegaTotal  = 0;
           if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
             hugeMegaTotal = 0.001;
@@ -1768,7 +1785,7 @@
         infoBtn.addEventListener('click', e => {
           e.stopPropagation();
           if (item.id === 'hugePlus') {
-            infoText.textContent = "Boosts huge-mega apple odds by 0.2% when enabled.";
+            infoText.textContent = "Boosts huge-mega apple odds by 0.2% and huge apple odds by 2% when enabled.";
           } else if (item.id === 'autoReverse') {
             infoText.textContent = "One time use per round, before you die. You will automatically switch heads.";
           } else if (item.id === 'artifacts') {
@@ -1829,6 +1846,9 @@
     let sprinting = false;
     let exhaustedUntil = 0;
 
+    let snailStamina = 100;
+    let snailKeyDown = false;
+
     const canvas   = document.getElementById('gameCanvas');
     const ctx      = canvas.getContext('2d');
     const tileSize = 40;
@@ -1871,6 +1891,9 @@
       sprinting = false;
       exhaustedUntil = 0;
 
+      snailStamina = 100;
+      snailKeyDown = false;
+
       lastSlowTime = Date.now() - 30000;
       slowdownActive = false;
       updateCurrentSpeed();
@@ -1901,12 +1924,15 @@
       if (e.code === 'ArrowDown'  && dir.y !== -1) nextDir = {x:0,y: 1};
       if (e.code === 'ArrowLeft'  && dir.x !==  1) nextDir = {x:-1,y:0};
       if (e.code === 'ArrowRight' && dir.x !== -1) nextDir = {x:1,y:0};
-      if (e.code === 'KeyZ' &&
-          hasSlowAbility && slowAbilityEnabled) {
-        const now = Date.now();
-        if (now - lastSlowTime >= 30000) {
-          activateSlow();
-          lastSlowTime = now;
+      if (e.code === 'KeyZ') {
+        if (goldenSnailUnlocked) {
+          snailKeyDown = true;
+        } else if (hasSlowAbility && slowAbilityEnabled) {
+          const now = Date.now();
+          if (now - lastSlowTime >= 30000) {
+            activateSlow();
+            lastSlowTime = now;
+          }
         }
       }
       if (e.code === 'KeyE' &&
@@ -1924,6 +1950,7 @@
     });
     document.addEventListener('keyup', e => {
       if (e.code === 'ShiftLeft') sprintKeyDown = false;
+      if (e.code === 'KeyZ' && goldenSnailUnlocked) snailKeyDown = false;
     });
 
     retryBtn.addEventListener('click', init);
@@ -1942,7 +1969,7 @@
           rawMega     = oddsConfig.rawMega;
           rawHuge     = oddsConfig.rawHuge;
           rawHugeMega = oddsConfig.rawHugeMega;
-          if (goldenSnailEnabled) {
+          if (goldenSnailEnabled && !goldenSnailUnlocked) {
             rawNormal = Math.max(0, rawNormal - 2);
             rawGoldenSnail = 2;
           }
@@ -1951,13 +1978,15 @@
           const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
           const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
           const megaTotal    = baseMega + bonusMega + mk2Bonus;
-          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)
+                               ? 0.01 + ((hasHugePlus && hugePlusEnabled) ? 0.02 : 0)
+                               : 0;
           let hugeMegaTotal  = 0;
           if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
             hugeMegaTotal = 0.001;
             if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
           }
-          const goldenSnailTotal = goldenSnailEnabled ? 0.02 : 0;
+          const goldenSnailTotal = (goldenSnailEnabled && !goldenSnailUnlocked) ? 0.02 : 0;
           rawMega     = megaTotal    * 100;
           rawHuge     = hugeTotal    * 100;
           rawHugeMega = hugeMegaTotal * 100;
@@ -2098,6 +2127,21 @@
             snake.pop();
             baseScoreInc = 0;
             baseCoinInc  = 0;
+            if (!goldenSnailUnlocked) {
+              goldenSnailUnlocked = true;
+              goldenSnailEnabled = true;
+              hasSlowAbility = false;
+              slowAbilityEnabled = false;
+              snailStamina = 100;
+              slowIconEl.src = goldenSnailImg.src;
+              slowCooldownText.style.fontSize = '24px';
+              slowCooldownText.style.color = '#fff';
+              slowCooldownText.style.textShadow = '0 0 4px #000';
+              goldenSnailOdds.textContent = '';
+              updateGoldenSnailToggle();
+              discoveredTextEl.textContent = 'Golden Snail Artifact Discovered';
+              setTimeout(() => { discoveredTextEl.textContent = ''; }, 5000);
+            }
           } else {
             baseScoreInc = 1;
             baseCoinInc  = 1;
@@ -2250,18 +2294,35 @@
     function updateCooldownUI() {
       const now = Date.now();
 
-      if (!hasSlowAbility || !slowAbilityEnabled) {
-        slowIconEl.style.display = 'none';
-      } else {
-        slowIconEl.style.display = 'block';
-        const elapsed = now - lastSlowTime;
-        if (elapsed < 30000) {
-          slowIconEl.classList.add('disabled');
-          const remaining = Math.ceil((30000 - elapsed) / 1000);
-          slowCooldownText.textContent = remaining > 0 ? remaining : '';
+      if (goldenSnailUnlocked) {
+        if (!goldenSnailEnabled) {
+          slowIconEl.style.display = 'none';
+          slowdownActive = false;
         } else {
-          slowIconEl.classList.remove('disabled');
-          slowCooldownText.textContent = '';
+          slowIconEl.style.display = 'block';
+          if (snailKeyDown && snailStamina > 0) {
+            snailStamina = Math.max(0, snailStamina - 0.5);
+            if (!slowdownActive) { slowdownActive = true; updateCurrentSpeed(); }
+          } else {
+            snailStamina = Math.min(100, snailStamina + 0.25);
+            if (slowdownActive) { slowdownActive = false; updateCurrentSpeed(); }
+          }
+          slowCooldownText.textContent = Math.round(snailStamina) + '%';
+        }
+      } else {
+        if (!hasSlowAbility || !slowAbilityEnabled) {
+          slowIconEl.style.display = 'none';
+        } else {
+          slowIconEl.style.display = 'block';
+          const elapsed = now - lastSlowTime;
+          if (elapsed < 30000) {
+            slowIconEl.classList.add('disabled');
+            const remaining = Math.ceil((30000 - elapsed) / 1000);
+            slowCooldownText.textContent = remaining > 0 ? remaining : '';
+          } else {
+            slowIconEl.classList.remove('disabled');
+            slowCooldownText.textContent = '';
+          }
         }
       }
 
