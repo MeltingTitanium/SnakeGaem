@@ -848,6 +848,7 @@
     const abilityContainer     = document.getElementById('abilityContainer');
     const slowIconEl           = document.getElementById('slowAbilityIcon');
     const slowCooldownText     = document.getElementById('slowCooldownText');
+    const defaultSlowIconSrc   = slowIconEl.src;
 
     const speedWrapper         = document.getElementById('speedAbilityWrapper');
     const speedFill            = document.getElementById('speedFill');
@@ -943,10 +944,11 @@
 
     function setAbilityVisibility(){
       let showSlow = false;
-      if (!hasDiscoveredGoldenSnail) {
+      if (!hasDiscoveredGoldenSnail || !goldenSnailAbilityEnabled) {
         showSlow = hasSlowAbility && slowAbilityEnabled;
-      } else {
-        showSlow = goldenSnailAbilityEnabled;
+      }
+      if (hasDiscoveredGoldenSnail && goldenSnailAbilityEnabled) {
+        showSlow = true;
       }
       abilityContainer.style.display =
         ((showSlow) || (hasSpeedAbility && speedAbilityEnabled))
@@ -1177,6 +1179,12 @@
           goldenSnailAbilityEnabled = goldenSnailEnabled;
           if (goldenSnailEnabled) {
             slowAbilityEnabled = false;
+            slowIconEl.src = goldenSnailImg.src;
+            slowCooldownText.style.color = '#fff';
+          }
+          if (!goldenSnailEnabled) {
+            slowIconEl.src = defaultSlowIconSrc;
+            slowCooldownText.style.color = '#000';
           }
           updateShop();
         }
@@ -2325,16 +2333,14 @@
           }
         }
       } else {
-        if (!goldenSnailAbilityEnabled) {
-          slowIconEl.style.display = 'none';
-          slowCooldownText.textContent = '';
-        } else {
+        if (goldenSnailAbilityEnabled) {
           slowIconEl.style.display = 'block';
+          slowIconEl.src = goldenSnailImg.src;
           slowIconEl.classList.remove('disabled');
           slowCooldownText.style.color = '#fff';
           if (snailKeyDown && goldenSnailStamina > 0) {
             slowdownActive = true;
-            goldenSnailStamina = Math.max(0, goldenSnailStamina - 5 * (delta/1000));
+            goldenSnailStamina = Math.max(0, goldenSnailStamina - 8 * (delta/1000));
           } else {
             slowdownActive = false;
             snailRegenAccum += delta;
@@ -2345,6 +2351,24 @@
           }
           slowCooldownText.textContent = Math.round(goldenSnailStamina) + '%';
           updateCurrentSpeed();
+        } else {
+          slowIconEl.src = defaultSlowIconSrc;
+          slowCooldownText.style.color = '#000';
+          if (!hasSlowAbility || !slowAbilityEnabled) {
+            slowIconEl.style.display = 'none';
+            slowCooldownText.textContent = '';
+          } else {
+            slowIconEl.style.display = 'block';
+            const elapsed = now - lastSlowTime;
+            if (elapsed < 30000) {
+              slowIconEl.classList.add('disabled');
+              const remaining = Math.ceil((30000 - elapsed) / 1000);
+              slowCooldownText.textContent = remaining > 0 ? remaining : '';
+            } else {
+              slowIconEl.classList.remove('disabled');
+              slowCooldownText.textContent = '';
+            }
+          }
         }
       }
 
