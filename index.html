@@ -624,6 +624,7 @@
     <h2>Artifacts</h2>
     <div id="artifactItems">
       <div class="artifactItem" id="goldenSnailArtifact">
+        <span>Golden Snail</span>
         <img id="goldenSnailIconImg" src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Golden%20Pixel%20Snail%20on%20Black%20Background%20(1).png" alt="Golden Snail Icon" style="width:80px;height:80px;image-rendering:pixelated;" />
         <div style="display:flex; align-items:center; margin-top:8px;">
           <span id="goldenSnailOdds">Odds: 2%</span>
@@ -910,7 +911,12 @@
       let goldenSnailEnabled = false;
 
     // NEW: track discovery
-    let hasDiscoveredHugeMegaApple= false;
+      let hasDiscoveredHugeMegaApple= false;
+      let hasDiscoveredGoldenSnail = false;
+      let goldenSnailAbilityEnabled = false;
+      let goldenSnailStamina = 100;
+      let snailKeyDown = false;
+      let snailRegenAccum = 0;
 
     const proficientShopItems = [
       { id:'hugeApple',   name:'Huge Apple', price:500 },
@@ -936,11 +942,27 @@
     ];
 
     function setAbilityVisibility(){
+      let showSlow = false;
+      if (!hasDiscoveredGoldenSnail) {
+        showSlow = hasSlowAbility && slowAbilityEnabled;
+      } else {
+        showSlow = goldenSnailAbilityEnabled;
+      }
       abilityContainer.style.display =
-        ((hasSlowAbility && slowAbilityEnabled) || (hasSpeedAbility && speedAbilityEnabled))
+        ((showSlow) || (hasSpeedAbility && speedAbilityEnabled))
         ? 'block' : 'none';
       speedWrapper.style.display =
         (hasSpeedAbility && speedAbilityEnabled) ? 'block' : 'none';
+    }
+
+    function updateGoldenSnailToggle(){
+      if (!hasDiscoveredGoldenSnail) {
+        goldenSnailToggleBtn.textContent = goldenSnailEnabled ? 'Searching' : 'Not Searching';
+      } else {
+        goldenSnailToggleBtn.textContent = goldenSnailEnabled ? 'ON' : 'OFF';
+      }
+      goldenSnailToggleBtn.classList.toggle('on', goldenSnailEnabled);
+      goldenSnailToggleBtn.classList.toggle('off', !goldenSnailEnabled);
     }
 
     let oddsConfig = null;
@@ -979,6 +1001,7 @@
 
       updateDisplays();
       setAbilityVisibility();
+      updateGoldenSnailToggle();
     });
 
     document.getElementById('musicToggle').addEventListener('change', () => {
@@ -1089,7 +1112,7 @@
           const rawHuge   = oddsConfig.rawHuge;
           const rawHugeMega = oddsConfig.rawHugeMega;
           let rawGoldenSnail = 0;
-          if (goldenSnailEnabled) {
+          if (goldenSnailEnabled && !hasDiscoveredGoldenSnail) {
             rawNormal = Math.max(0, rawNormal - 2);
             rawGoldenSnail = 2;
           }
@@ -1104,13 +1127,14 @@
           const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
           const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
           const megaTotal    = baseMega + bonusMega + mk2Bonus;
-          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          let hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          if (hasHugeApple && hugeAppleEnabled && hasHugePlus && hugePlusEnabled) hugeTotal += 0.02;
           let hugeMegaTotal  = 0;
           if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
             hugeMegaTotal = 0.001;
             if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
           }
-          const goldenSnailTotal = goldenSnailEnabled ? 0.02 : 0;
+          const goldenSnailTotal = (goldenSnailEnabled && !hasDiscoveredGoldenSnail) ? 0.02 : 0;
           redPerc      = 1 - megaTotal - hugeTotal - hugeMegaTotal - goldenSnailTotal;
           megaPerc     = megaTotal;
           hugePerc     = hugeTotal;
@@ -1123,7 +1147,7 @@
         hugeMegaOddsText.textContent = (hugeMegaPerc * 100).toFixed(1) + '%';
         goldenSnailOddsText.textContent  = (goldenSnailPerc * 100).toFixed(1) + '%';
         document.querySelector('.hugeMegaRow').style.display = hasDiscoveredHugeMegaApple ? 'flex' : 'none';
-        document.querySelector('.goldenSnailRow').style.display = goldenSnailEnabled ? 'flex' : 'none';
+        document.querySelector('.goldenSnailRow').style.display = (!hasDiscoveredGoldenSnail && goldenSnailEnabled) ? 'flex' : 'none';
 
         menuContainer.style.display  = 'none';
         oddsContainer.style.display  = 'flex';
@@ -1149,13 +1173,15 @@
       goldenSnailToggleBtn.addEventListener('click', e => {
         e.stopPropagation();
         goldenSnailEnabled = !goldenSnailEnabled;
-        goldenSnailToggleBtn.textContent = goldenSnailEnabled ? 'ON' : 'OFF';
-        goldenSnailToggleBtn.classList.toggle('on', goldenSnailEnabled);
-        goldenSnailToggleBtn.classList.toggle('off', !goldenSnailEnabled);
+        if (hasDiscoveredGoldenSnail) {
+          goldenSnailAbilityEnabled = goldenSnailEnabled;
+        }
+        updateGoldenSnailToggle();
+        setAbilityVisibility();
       });
       goldenSnailInfoBtn.addEventListener('click', e => {
         e.stopPropagation();
-        infoText.textContent = 'Coming soon';
+        infoText.textContent = 'A golden variant of the slow down ability... Hold Z to slow you down.';
         infoModal.style.display = 'flex';
       });
 
@@ -1167,7 +1193,8 @@
           const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
           const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
           const megaTotal    = baseMega + bonusMega + mk2Bonus;
-          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          let hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          if (hasHugeApple && hugeAppleEnabled && hasHugePlus && hugePlusEnabled) hugeTotal += 0.02;
           let hugeMegaTotal  = 0;
           if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
             hugeMegaTotal = 0.001;
@@ -1823,6 +1850,7 @@
     const sprintSpeed = 17;
     const speed = 12;
     let slowdownActive = false;
+    let lastSnailUpdate = Date.now();
 
     let stamina = 100;
     let sprintKeyDown = false;
@@ -1901,12 +1929,15 @@
       if (e.code === 'ArrowDown'  && dir.y !== -1) nextDir = {x:0,y: 1};
       if (e.code === 'ArrowLeft'  && dir.x !==  1) nextDir = {x:-1,y:0};
       if (e.code === 'ArrowRight' && dir.x !== -1) nextDir = {x:1,y:0};
-      if (e.code === 'KeyZ' &&
-          hasSlowAbility && slowAbilityEnabled) {
-        const now = Date.now();
-        if (now - lastSlowTime >= 30000) {
-          activateSlow();
-          lastSlowTime = now;
+      if (e.code === 'KeyZ') {
+        if (hasDiscoveredGoldenSnail && goldenSnailAbilityEnabled) {
+          snailKeyDown = true;
+        } else if (hasSlowAbility && slowAbilityEnabled) {
+          const now = Date.now();
+          if (now - lastSlowTime >= 30000) {
+            activateSlow();
+            lastSlowTime = now;
+          }
         }
       }
       if (e.code === 'KeyE' &&
@@ -1924,6 +1955,9 @@
     });
     document.addEventListener('keyup', e => {
       if (e.code === 'ShiftLeft') sprintKeyDown = false;
+      if (e.code === 'KeyZ' && hasDiscoveredGoldenSnail && goldenSnailAbilityEnabled) {
+        snailKeyDown = false;
+      }
     });
 
     retryBtn.addEventListener('click', init);
@@ -1942,7 +1976,7 @@
           rawMega     = oddsConfig.rawMega;
           rawHuge     = oddsConfig.rawHuge;
           rawHugeMega = oddsConfig.rawHugeMega;
-          if (goldenSnailEnabled) {
+          if (goldenSnailEnabled && !hasDiscoveredGoldenSnail) {
             rawNormal = Math.max(0, rawNormal - 2);
             rawGoldenSnail = 2;
           }
@@ -1951,13 +1985,14 @@
           const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
           const mk2Bonus     = (hasMegaAbility && megaAbilityEnabled && hasMegaMk2      && megaMk2Enabled)      ? 0.10 : 0;
           const megaTotal    = baseMega + bonusMega + mk2Bonus;
-          const hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          let hugeTotal    = (hasHugeApple    && hugeAppleEnabled)    ? 0.01 : 0;
+          if (hasHugeApple && hugeAppleEnabled && hasHugePlus && hugePlusEnabled) hugeTotal += 0.02;
           let hugeMegaTotal  = 0;
           if (hasHugeApple && hugeAppleEnabled && hasMegaAbility && megaAbilityEnabled) {
             hugeMegaTotal = 0.001;
             if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
           }
-          const goldenSnailTotal = goldenSnailEnabled ? 0.02 : 0;
+          const goldenSnailTotal = (goldenSnailEnabled && !hasDiscoveredGoldenSnail) ? 0.02 : 0;
           rawMega     = megaTotal    * 100;
           rawHuge     = hugeTotal    * 100;
           rawHugeMega = hugeMegaTotal * 100;
@@ -2095,6 +2130,17 @@
             baseScoreInc = 10;
             baseCoinInc  = 10;
           } else if (apple.type === 'goldenSnail') {
+            if (!hasDiscoveredGoldenSnail) {
+              hasDiscoveredGoldenSnail = true;
+              goldenSnailAbilityEnabled = true;
+              goldenSnailEnabled = true;
+              slowIconEl.src = goldenSnailImg.src;
+              slowCooldownText.style.color = '#fff';
+              discoveredTextEl.textContent = 'Golden Snail Artifact Discovered';
+              setTimeout(() => { discoveredTextEl.textContent = ''; }, 5000);
+              updateGoldenSnailToggle();
+              setAbilityVisibility();
+            }
             snake.pop();
             baseScoreInc = 0;
             baseCoinInc  = 0;
@@ -2249,19 +2295,44 @@
     let lastSlowTime = Date.now() - 30000;
     function updateCooldownUI() {
       const now = Date.now();
+      const delta = now - lastSnailUpdate;
+      lastSnailUpdate = now;
 
-      if (!hasSlowAbility || !slowAbilityEnabled) {
-        slowIconEl.style.display = 'none';
-      } else {
-        slowIconEl.style.display = 'block';
-        const elapsed = now - lastSlowTime;
-        if (elapsed < 30000) {
-          slowIconEl.classList.add('disabled');
-          const remaining = Math.ceil((30000 - elapsed) / 1000);
-          slowCooldownText.textContent = remaining > 0 ? remaining : '';
+      if (!hasDiscoveredGoldenSnail) {
+        if (!hasSlowAbility || !slowAbilityEnabled) {
+          slowIconEl.style.display = 'none';
         } else {
+          slowIconEl.style.display = 'block';
+          const elapsed = now - lastSlowTime;
+          if (elapsed < 30000) {
+            slowIconEl.classList.add('disabled');
+            const remaining = Math.ceil((30000 - elapsed) / 1000);
+            slowCooldownText.textContent = remaining > 0 ? remaining : '';
+          } else {
+            slowIconEl.classList.remove('disabled');
+            slowCooldownText.textContent = '';
+          }
+        }
+      } else {
+        if (!goldenSnailAbilityEnabled) {
+          slowIconEl.style.display = 'none';
+        } else {
+          slowIconEl.style.display = 'block';
           slowIconEl.classList.remove('disabled');
-          slowCooldownText.textContent = '';
+          slowCooldownText.style.color = '#fff';
+          if (snailKeyDown && goldenSnailStamina > 0) {
+            slowdownActive = true;
+            goldenSnailStamina = Math.max(0, goldenSnailStamina - 5 * (delta/1000));
+          } else {
+            slowdownActive = false;
+            snailRegenAccum += delta;
+            while (snailRegenAccum >= 2000) {
+              goldenSnailStamina = Math.min(100, goldenSnailStamina + 5);
+              snailRegenAccum -= 2000;
+            }
+          }
+          slowCooldownText.textContent = Math.round(goldenSnailStamina) + '%';
+          updateCurrentSpeed();
         }
       }
 
