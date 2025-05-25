@@ -1983,6 +1983,11 @@
             x: Math.floor(Math.random() * (cols - 2)),
             y: Math.floor(Math.random() * (rows - 2))
           };
+        } else if (type === 'goldenSnail') {
+          p = {
+            x: Math.floor(Math.random() * (cols - 1)),
+            y: Math.floor(Math.random() * (rows - 1))
+          };
         } else {
           p = {
             x: Math.floor(Math.random() * cols),
@@ -2035,6 +2040,13 @@
         if (
           head.x >= apple.x && head.x < apple.x + 3 &&
           head.y >= apple.y && head.y < apple.y + 3
+        ) {
+          ate = true;
+        }
+      } else if (apple.type === 'goldenSnail') {
+        if (
+          head.x >= apple.x && head.x < apple.x + 2 &&
+          head.y >= apple.y && head.y < apple.y + 2
         ) {
           ate = true;
         }
@@ -2212,7 +2224,7 @@
           ctx.fillStyle = (apple.type==='huge') ? 'red' : '#551A8B';
           ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize*3, tileSize*3);
         } else if (apple.type === 'goldenSnail') {
-          ctx.drawImage(goldenSnailImg, apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
+          ctx.drawImage(goldenSnailImg, apple.x*tileSize, apple.y*tileSize, tileSize*2, tileSize*2);
         } else {
           ctx.fillStyle = (apple.type==='mega') ? '#551A8B' : 'red';
           ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
