@@ -624,7 +624,7 @@
     <h2>Artifacts</h2>
     <div id="artifactItems">
       <div class="artifactItem" id="goldenSnailArtifact">
-        <img id="goldenSnailIconImg" src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Golden%20Pixel%20Snail%20on%20Black%20Background%20(1).png" alt="Golden Snail Icon" />
+        <img id="goldenSnailIconImg" src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Golden%20Pixel%20Snail%20on%20Black%20Background%20(1).png" alt="Golden Snail Icon" style="width:80px;height:80px;image-rendering:pixelated;" />
         <div style="display:flex; align-items:center; margin-top:8px;">
           <span id="goldenSnailOdds">Odds: 2%</span>
           <span id="goldenSnailInfo" class="info-btn">?</span>
@@ -655,7 +655,7 @@
       <span id="hugeMegaOddsText">0%</span>
     </div>
     <div class="appleRow goldenSnailRow" style="display:none;">
-      <img id="goldenSnailOddsIcon" src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Golden%20Pixel%20Snail%20on%20Black%20Background%20(1).png" style="width:40px;height:40px;image-rendering:pixelated;"/>
+      <img id="goldenSnailOddsIcon" src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Golden%20Pixel%20Snail%20on%20Black%20Background%20(1).png" style="width:60px;height:60px;image-rendering:pixelated;"/>
       <span id="goldenSnailOddsText">0%</span>
     </div>
     <button id="oddsBackBtn">Back</button>
@@ -1983,6 +1983,11 @@
             x: Math.floor(Math.random() * (cols - 2)),
             y: Math.floor(Math.random() * (rows - 2))
           };
+        } else if (type === 'goldenSnail') {
+          p = {
+            x: Math.floor(Math.random() * (cols - 1)),
+            y: Math.floor(Math.random() * (rows - 1))
+          };
         } else {
           p = {
             x: Math.floor(Math.random() * cols),
@@ -2035,6 +2040,13 @@
         if (
           head.x >= apple.x && head.x < apple.x + 3 &&
           head.y >= apple.y && head.y < apple.y + 3
+        ) {
+          ate = true;
+        }
+      } else if (apple.type === 'goldenSnail') {
+        if (
+          head.x >= apple.x && head.x < apple.x + 2 &&
+          head.y >= apple.y && head.y < apple.y + 2
         ) {
           ate = true;
         }
@@ -2212,7 +2224,7 @@
           ctx.fillStyle = (apple.type==='huge') ? 'red' : '#551A8B';
           ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize*3, tileSize*3);
         } else if (apple.type === 'goldenSnail') {
-          ctx.drawImage(goldenSnailImg, apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
+          ctx.drawImage(goldenSnailImg, apple.x*tileSize, apple.y*tileSize, tileSize*2, tileSize*2);
         } else {
           ctx.fillStyle = (apple.type==='mega') ? '#551A8B' : 'red';
           ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
