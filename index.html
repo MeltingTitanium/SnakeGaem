@@ -459,23 +459,23 @@
       width:100%; height:100%; background:#00f;
     }
     #speedStaminaText {
-      position:absolute; bottom:100%;
-      width:120px; text-align:center;
-      font-size:24px; color:#fff;
-      line-height:24px; margin-bottom:8px;
-      pointer-events:none;
-    }
-    #speedStaminaText {
-      top: 0;
-      bottom: auto;
-      margin-bottom: 0;
-      height: 120px;
-      line-height: 120px;
-      z-index: 2;
       position: absolute;
+      top: 0;
+      left: 0;
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 24px;
       color: #fff;
+      z-index: 2;
       text-shadow: 0 0 4px #000;
       pointer-events: none;
+    }
+    #speedStaminaText.bigInfinity {
+      font-size: 72px;
     }
 
     /* COMBO UI */
@@ -1268,10 +1268,12 @@
             speedAbilityEnabled = false;
             speedPlusEnabled = false;
             speedStaminaText.textContent = '∞';
+            speedStaminaText.classList.add('bigInfinity');
             speedFill.style.background = '#d4af37';
           }
           if (!goldenStaminaEnabled) {
             speedStaminaText.textContent = Math.round(stamina) + '%';
+            speedStaminaText.classList.remove('bigInfinity');
             speedFill.style.background = '#00f';
           }
           updateShop();
@@ -2289,6 +2291,10 @@
               goldenStaminaEnabled = true;
               speedAbilityEnabled = false;
               speedPlusEnabled = false;
+              speedStaminaText.textContent = '∞';
+              speedStaminaText.classList.add('bigInfinity');
+              speedFill.style.background = '#d4af37';
+              speedFill.style.height = '100%';
               discoveredTextEl.textContent = 'Golden Stamina Artifact found';
               setTimeout(() => { discoveredTextEl.textContent = ''; }, 5000);
               updateGoldenStaminaToggle();
@@ -2522,13 +2528,16 @@
         }
         stamina = 100;
         speedStaminaText.textContent = '∞';
+        speedStaminaText.classList.add('bigInfinity');
         speedFill.style.height = '100%';
         speedFill.style.background = '#d4af37';
-      } else if (!hasSpeedAbility || !speedAbilityEnabled) {
-        speedWrapper.style.display = 'none';
-      } else {
-        speedWrapper.style.display = 'block';
-        const exhausted = now < exhaustedUntil;
+        } else if (!hasSpeedAbility || !speedAbilityEnabled) {
+          speedWrapper.style.display = 'none';
+          speedStaminaText.classList.remove('bigInfinity');
+        } else {
+          speedWrapper.style.display = 'block';
+          speedStaminaText.classList.remove('bigInfinity');
+          const exhausted = now < exhaustedUntil;
 
         const newSprinting = sprintKeyDown && !exhausted && stamina > 0;
         if (newSprinting !== sprinting) {
