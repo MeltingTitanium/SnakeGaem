@@ -632,6 +632,15 @@
         </div>
         <button id="goldenSnailToggle" class="toggle-btn off">OFF</button>
       </div>
+      <div class="artifactItem" id="goldenStaminaArtifact">
+        <span>Golden Stamina</span>
+        <canvas id="goldenStaminaIcon" width="80" height="80" style="image-rendering:pixelated;border:4px solid #000;"></canvas>
+        <div style="display:flex; align-items:center; margin-top:8px;">
+          <span id="goldenStaminaOdds">Odds: 1%</span>
+          <span id="goldenStaminaInfo" class="info-btn">?</span>
+        </div>
+        <button id="goldenStaminaToggle" class="toggle-btn off">OFF</button>
+      </div>
     </div>
     <button id="artifactBackBtn">Back</button>
   </div>
@@ -658,6 +667,10 @@
     <div class="appleRow goldenSnailRow" style="display:none;">
       <img id="goldenSnailOddsIcon" src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Golden%20Pixel%20Snail%20on%20Black%20Background%20(1).png" style="width:60px;height:60px;image-rendering:pixelated;"/>
       <span id="goldenSnailOddsText">0%</span>
+    </div>
+    <div class="appleRow goldenStaminaRow" style="display:none;">
+      <canvas id="goldenStaminaOddsIcon" width="60" height="60" style="image-rendering:pixelated;border:4px solid #000;"></canvas>
+      <span id="goldenStaminaOddsText">0%</span>
     </div>
     <button id="oddsBackBtn">Back</button>
   </div>
@@ -752,6 +765,8 @@
     <span id="reverseCooldownText"></span>
   </div>
 
+  <img id="infinityImg" src="Models/Infinity Symbol.png" style="display:none"/>
+
   <script>
     // RANDOMIZE BACKGROUND MUSIC BETWEEN TRACKS
     const bgMusic = document.getElementById('bgMusic');
@@ -825,6 +840,9 @@
       const goldenSnailToggleBtn     = document.getElementById('goldenSnailToggle');
       const goldenSnailInfoBtn       = document.getElementById('goldenSnailInfo');
       const goldenSnailOddsText      = document.getElementById('goldenSnailOddsText');
+      const goldenStaminaToggleBtn   = document.getElementById('goldenStaminaToggle');
+      const goldenStaminaInfoBtn     = document.getElementById('goldenStaminaInfo');
+      const goldenStaminaOddsText    = document.getElementById('goldenStaminaOddsText');
       const oddsBackBtn          = document.getElementById('oddsBackBtn');
       const redOddsText          = document.getElementById('redOddsText');
     const megaOddsText         = document.getElementById('megaOddsText');
@@ -871,6 +889,9 @@
       const coinSetBtn           = document.getElementById('coinSetBtn');
       const oddsSetBtn           = document.getElementById('oddsSetBtn');
       const goldenSnailImg          = document.getElementById('goldenSnailOddsIcon');
+      const goldenStaminaIconCanvas = document.getElementById('goldenStaminaIcon');
+      const goldenStaminaOddsCanvas = document.getElementById('goldenStaminaOddsIcon');
+      const infinityImg             = document.getElementById('infinityImg');
 
     const comboContainer       = document.getElementById('comboContainer');
     const comboMultiplierTextEl= document.getElementById('comboMultiplierText');
@@ -881,6 +902,24 @@
     deathAudio.volume = 0.2;
     const selectAudio = new Audio('https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/main/Sounds%20%26%20Music/Menu%20Select%20-%20made%20by%20Fupi%20on%20OpenGameArt.org.ogg');
     const coinAudio   = new Audio('https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/main/Sounds%20%26%20Music/coin%20by%20Fupi%20on%20OpenGameArt.org.wav');
+
+    function drawGoldenStaminaIcon(canvas) {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#d4af37';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(infinityImg, 0,0, canvas.width, canvas.height);
+    }
+
+    if (infinityImg.complete) {
+      drawGoldenStaminaIcon(goldenStaminaIconCanvas);
+      drawGoldenStaminaIcon(goldenStaminaOddsCanvas);
+    } else {
+      infinityImg.onload = () => {
+        drawGoldenStaminaIcon(goldenStaminaIconCanvas);
+        drawGoldenStaminaIcon(goldenStaminaOddsCanvas);
+      };
+    }
 
     // Settings & state
     let musicEnabled, sfxEnabled, skipStartScreen;
@@ -910,11 +949,14 @@
       let hasSpeedPlus = false, speedPlusEnabled = false;
       let hasArtifactsFeature = false;
       let goldenSnailEnabled = false;
+      let goldenStaminaEnabled = false;
 
     // NEW: track discovery
       let hasDiscoveredHugeMegaApple= false;
       let hasDiscoveredGoldenSnail = false;
+      let hasDiscoveredGoldenStamina = false;
       let goldenSnailAbilityEnabled = false;
+      let goldenStaminaAbilityEnabled = false;
       let goldenSnailStamina = 100;
       let snailKeyDown = false;
       let snailRegenAccum = 0;
@@ -950,11 +992,19 @@
       if (hasDiscoveredGoldenSnail && goldenSnailAbilityEnabled) {
         showSlow = true;
       }
+
+      let showSpeed = false;
+      if (!hasDiscoveredGoldenStamina || !goldenStaminaAbilityEnabled) {
+        showSpeed = hasSpeedAbility && speedAbilityEnabled;
+      }
+      if (hasDiscoveredGoldenStamina && goldenStaminaAbilityEnabled) {
+        showSpeed = true;
+      }
+
       abilityContainer.style.display =
-        ((showSlow) || (hasSpeedAbility && speedAbilityEnabled))
+        ((showSlow) || showSpeed)
         ? 'block' : 'none';
-      speedWrapper.style.display =
-        (hasSpeedAbility && speedAbilityEnabled) ? 'block' : 'none';
+      speedWrapper.style.display = showSpeed ? 'block' : 'none';
     }
 
     function updateGoldenSnailToggle(){
@@ -965,6 +1015,16 @@
       }
       goldenSnailToggleBtn.classList.toggle('on', goldenSnailEnabled);
       goldenSnailToggleBtn.classList.toggle('off', !goldenSnailEnabled);
+    }
+
+    function updateGoldenStaminaToggle(){
+      if (!hasDiscoveredGoldenStamina) {
+        goldenStaminaToggleBtn.textContent = goldenStaminaEnabled ? 'Searching' : 'Not Searching';
+      } else {
+        goldenStaminaToggleBtn.textContent = goldenStaminaEnabled ? 'ON' : 'OFF';
+      }
+      goldenStaminaToggleBtn.classList.toggle('on', goldenStaminaEnabled);
+      goldenStaminaToggleBtn.classList.toggle('off', !goldenStaminaEnabled);
     }
 
     let oddsConfig = null;
@@ -1004,6 +1064,7 @@
       updateDisplays();
       setAbilityVisibility();
       updateGoldenSnailToggle();
+      updateGoldenStaminaToggle();
     });
 
     document.getElementById('musicToggle').addEventListener('change', () => {
@@ -1108,22 +1169,29 @@
       oddsBtn.addEventListener('click', () => {
         let redPerc, megaPerc, hugePerc, hugeMegaPerc;
         let goldenSnailPerc = 0;
+        let goldenStaminaPerc = 0;
         if (oddsConfig) {
           let rawNormal   = oddsConfig.rawNormal;
           const rawMega   = oddsConfig.rawMega;
           const rawHuge   = oddsConfig.rawHuge;
           const rawHugeMega = oddsConfig.rawHugeMega;
           let rawGoldenSnail = 0;
+          let rawGoldenStamina = 0;
           if (goldenSnailEnabled && !hasDiscoveredGoldenSnail) {
             rawNormal = Math.max(0, rawNormal - 2);
             rawGoldenSnail = 2;
           }
-          const sum = rawNormal + rawMega + rawHuge + rawHugeMega + rawGoldenSnail;
+          if (goldenStaminaEnabled && !hasDiscoveredGoldenStamina) {
+            rawNormal = Math.max(0, rawNormal - 1);
+            rawGoldenStamina = 1;
+          }
+          const sum = rawNormal + rawMega + rawHuge + rawHugeMega + rawGoldenSnail + rawGoldenStamina;
           redPerc      = rawNormal / sum;
           megaPerc     = rawMega   / sum;
           hugePerc     = rawHuge   / sum;
           hugeMegaPerc = rawHugeMega / sum;
           goldenSnailPerc  = rawGoldenSnail / sum;
+          goldenStaminaPerc = rawGoldenStamina / sum;
         } else {
           const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
           const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
@@ -1137,19 +1205,23 @@
             if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
           }
           const goldenSnailTotal = (goldenSnailEnabled && !hasDiscoveredGoldenSnail) ? 0.02 : 0;
-          redPerc      = 1 - megaTotal - hugeTotal - hugeMegaTotal - goldenSnailTotal;
+          const goldenStaminaTotal = (goldenStaminaEnabled && !hasDiscoveredGoldenStamina) ? 0.01 : 0;
+          redPerc      = 1 - megaTotal - hugeTotal - hugeMegaTotal - goldenSnailTotal - goldenStaminaTotal;
           megaPerc     = megaTotal;
           hugePerc     = hugeTotal;
           hugeMegaPerc = hugeMegaTotal;
           goldenSnailPerc  = goldenSnailTotal;
+          goldenStaminaPerc = goldenStaminaTotal;
         }
         redOddsText.textContent      = (redPerc * 100).toFixed(1) + '%';
         megaOddsText.textContent     = (megaPerc * 100).toFixed(1) + '%';
         hugeOddsText.textContent     = (hugePerc * 100).toFixed(1) + '%';
         hugeMegaOddsText.textContent = (hugeMegaPerc * 100).toFixed(1) + '%';
         goldenSnailOddsText.textContent  = (goldenSnailPerc * 100).toFixed(1) + '%';
+        goldenStaminaOddsText.textContent = (goldenStaminaPerc * 100).toFixed(1) + '%';
         document.querySelector('.hugeMegaRow').style.display = hasDiscoveredHugeMegaApple ? 'flex' : 'none';
         document.querySelector('.goldenSnailRow').style.display = (!hasDiscoveredGoldenSnail && goldenSnailEnabled) ? 'flex' : 'none';
+        document.querySelector('.goldenStaminaRow').style.display = (!hasDiscoveredGoldenStamina && goldenStaminaEnabled) ? 'flex' : 'none';
 
         menuContainer.style.display  = 'none';
         oddsContainer.style.display  = 'flex';
@@ -1175,6 +1247,10 @@
       goldenSnailToggleBtn.addEventListener('click', e => {
         e.stopPropagation();
         goldenSnailEnabled = !goldenSnailEnabled;
+        if (!hasDiscoveredGoldenSnail && goldenSnailEnabled && !hasDiscoveredGoldenStamina) {
+          goldenStaminaEnabled = false;
+          updateGoldenStaminaToggle();
+        }
         if (hasDiscoveredGoldenSnail) {
           goldenSnailAbilityEnabled = goldenSnailEnabled;
           if (goldenSnailEnabled) {
@@ -1191,9 +1267,32 @@
         updateGoldenSnailToggle();
         setAbilityVisibility();
       });
+      goldenStaminaToggleBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        goldenStaminaEnabled = !goldenStaminaEnabled;
+        if (!hasDiscoveredGoldenStamina && goldenStaminaEnabled && !hasDiscoveredGoldenSnail) {
+          goldenSnailEnabled = false;
+          updateGoldenSnailToggle();
+        }
+        if (hasDiscoveredGoldenStamina) {
+          goldenStaminaAbilityEnabled = goldenStaminaEnabled;
+          if (goldenStaminaEnabled) {
+            speedAbilityEnabled = false;
+            speedPlusEnabled = false;
+          }
+          updateShop();
+        }
+        updateGoldenStaminaToggle();
+        setAbilityVisibility();
+      });
       goldenSnailInfoBtn.addEventListener('click', e => {
         e.stopPropagation();
         infoText.textContent = 'A golden variant of the slow down ability... Hold Z to slow you down.';
+        infoModal.style.display = 'flex';
+      });
+      goldenStaminaInfoBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        infoText.textContent = 'A golden variant of sprinting. Hold Shift to move fast without stamina limits.';
         infoModal.style.display = 'flex';
       });
 
@@ -1312,6 +1411,10 @@
           div.classList.add('disabled');
           buyBtn.disabled = true;
         }
+        if (buyBtn && isOwned && item.id === 'speed' && goldenStaminaEnabled && hasDiscoveredGoldenStamina) {
+          div.classList.add('disabled');
+          buyBtn.disabled = true;
+        }
         if (buyBtn && isOwned && ['slow','explode','combo','mega','speed'].includes(item.id)) {
           buyBtn.classList.add(
             ((item.id==='slow'    && slowAbilityEnabled)   ||
@@ -1377,6 +1480,7 @@
               comboAbilityEnabled = !comboAbilityEnabled;
             }
             if (item.id === 'speed') {
+              if (goldenStaminaEnabled && hasDiscoveredGoldenStamina) return;
               speedAbilityEnabled = !speedAbilityEnabled;
               if (!speedAbilityEnabled) {
                 speedPlusEnabled = false;
@@ -1526,7 +1630,7 @@
         if (item.id === 'megaMk2' && !megaAbilityEnabled) {
           div.classList.add('disabled');
         }
-        if (item.id === 'speedPlus' && !speedAbilityEnabled) {
+        if (item.id === 'speedPlus' && (!speedAbilityEnabled || (goldenStaminaEnabled && hasDiscoveredGoldenStamina))) {
           div.classList.add('disabled');
         }
 
@@ -1568,7 +1672,7 @@
         if (item.id === 'megaMk2' && !megaAbilityEnabled) {
           buyBtn.disabled = true;
         }
-        if (item.id === 'speedPlus' && !speedAbilityEnabled) {
+        if (item.id === 'speedPlus' && (!speedAbilityEnabled || (goldenStaminaEnabled && hasDiscoveredGoldenStamina))) {
           buyBtn.disabled = true;
         }
 
@@ -1635,6 +1739,7 @@
             } else if (item.id === 'megaMk2') {
               megaMk2Enabled = !megaMk2Enabled;
             } else if (item.id === 'speedPlus') {
+              if (goldenStaminaEnabled && hasDiscoveredGoldenStamina) return;
               speedPlusEnabled = !speedPlusEnabled;
             }
             if (item.id === 'hugeApple') {
@@ -1993,7 +2098,7 @@
       function randomApple() {
         let p;
         let type;
-        let rawNormal, rawMega, rawHuge, rawHugeMega, rawGoldenSnail = 0;
+        let rawNormal, rawMega, rawHuge, rawHugeMega, rawGoldenSnail = 0, rawGoldenStamina = 0;
         if (oddsConfig) {
           rawNormal   = oddsConfig.rawNormal;
           rawMega     = oddsConfig.rawMega;
@@ -2002,6 +2107,10 @@
           if (goldenSnailEnabled && !hasDiscoveredGoldenSnail) {
             rawNormal = Math.max(0, rawNormal - 2);
             rawGoldenSnail = 2;
+          }
+          if (goldenStaminaEnabled && !hasDiscoveredGoldenStamina) {
+            rawNormal = Math.max(0, rawNormal - 1);
+            rawGoldenStamina = 1;
           }
         } else {
           const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
@@ -2016,13 +2125,15 @@
             if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
           }
           const goldenSnailTotal = (goldenSnailEnabled && !hasDiscoveredGoldenSnail) ? 0.02 : 0;
+          const goldenStaminaTotal = (goldenStaminaEnabled && !hasDiscoveredGoldenStamina) ? 0.01 : 0;
           rawMega     = megaTotal    * 100;
           rawHuge     = hugeTotal    * 100;
           rawHugeMega = hugeMegaTotal * 100;
           rawGoldenSnail  = goldenSnailTotal * 100;
-          rawNormal   = 100 - rawMega - rawHuge - rawHugeMega - rawGoldenSnail;
+          rawGoldenStamina = goldenStaminaTotal * 100;
+          rawNormal   = 100 - rawMega - rawHuge - rawHugeMega - rawGoldenSnail - rawGoldenStamina;
         }
-        const sumRaw = rawNormal + rawMega + rawHuge + rawHugeMega + rawGoldenSnail;
+        const sumRaw = rawNormal + rawMega + rawHuge + rawHugeMega + rawGoldenSnail + rawGoldenStamina;
         const r = Math.random() * sumRaw;
         if (r < rawHugeMega) {
           type = 'hugeMega';
@@ -2032,6 +2143,8 @@
           type = 'mega';
         } else if (r < rawHugeMega + rawHuge + rawMega + rawGoldenSnail) {
           type = 'goldenSnail';
+        } else if (r < rawHugeMega + rawHuge + rawMega + rawGoldenSnail + rawGoldenStamina) {
+          type = 'goldenStamina';
         } else {
           type = 'normal';
         }
@@ -2041,7 +2154,7 @@
             x: Math.floor(Math.random() * (cols - 2)),
             y: Math.floor(Math.random() * (rows - 2))
           };
-        } else if (type === 'goldenSnail') {
+        } else if (type === 'goldenSnail' || type === 'goldenStamina') {
           p = {
             x: Math.floor(Math.random() * (cols - 1)),
             y: Math.floor(Math.random() * (rows - 1))
@@ -2102,6 +2215,13 @@
           ate = true;
         }
       } else if (apple.type === 'goldenSnail') {
+        if (
+          head.x >= apple.x && head.x < apple.x + 2 &&
+          head.y >= apple.y && head.y < apple.y + 2
+        ) {
+          ate = true;
+        }
+      } else if (apple.type === 'goldenStamina') {
         if (
           head.x >= apple.x && head.x < apple.x + 2 &&
           head.y >= apple.y && head.y < apple.y + 2
@@ -2169,6 +2289,22 @@
             snake.pop();
             baseScoreInc = 0;
             baseCoinInc  = 0;
+          } else if (apple.type === 'goldenStamina') {
+            if (!hasDiscoveredGoldenStamina) {
+              hasDiscoveredGoldenStamina = true;
+              goldenStaminaAbilityEnabled = true;
+              goldenStaminaEnabled = true;
+              speedAbilityEnabled = false;
+              speedPlusEnabled = false;
+              discoveredTextEl.textContent = 'Golden Stamina Artifact found';
+              setTimeout(() => { discoveredTextEl.textContent = ''; }, 5000);
+              updateGoldenStaminaToggle();
+              updateShop();
+              setAbilityVisibility();
+            }
+            snake.pop();
+            baseScoreInc = 0;
+            baseCoinInc = 0;
           } else {
             baseScoreInc = 1;
             baseCoinInc  = 1;
@@ -2296,6 +2432,10 @@
           ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize*3, tileSize*3);
         } else if (apple.type === 'goldenSnail') {
           ctx.drawImage(goldenSnailImg, apple.x*tileSize, apple.y*tileSize, tileSize*2, tileSize*2);
+        } else if (apple.type === 'goldenStamina') {
+          ctx.fillStyle = '#d4af37';
+          ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize*2, tileSize*2);
+          ctx.drawImage(infinityImg, apple.x*tileSize, apple.y*tileSize, tileSize*2, tileSize*2);
         } else {
           ctx.fillStyle = (apple.type==='mega') ? '#551A8B' : 'red';
           ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
@@ -2379,32 +2519,41 @@
       }
 
       if (!hasSpeedAbility || !speedAbilityEnabled) {
-        speedWrapper.style.display = 'none';
-      } else {
-        speedWrapper.style.display = 'block';
-        const exhausted = now < exhaustedUntil;
-
-        const newSprinting = sprintKeyDown && !exhausted && stamina > 0;
-        if (newSprinting !== sprinting) {
-          sprinting = newSprinting;
-          updateCurrentSpeed();
+        if (!hasDiscoveredGoldenStamina || !goldenStaminaAbilityEnabled) {
+          speedWrapper.style.display = 'none';
         }
+      }
 
-        if (sprinting) {
-          const drainAmount = (hasSpeedPlus && speedPlusEnabled) ? 0.7 : 1;
-          stamina = Math.max(0, stamina - drainAmount);
-          if (stamina === 0) {
-            exhaustedUntil = now + 20000;
-            sprinting = false;
+      if ((hasSpeedAbility && speedAbilityEnabled) || (hasDiscoveredGoldenStamina && goldenStaminaAbilityEnabled)) {
+        speedWrapper.style.display = 'block';
+        if (hasDiscoveredGoldenStamina && goldenStaminaAbilityEnabled) {
+          sprinting = sprintKeyDown;
+          updateCurrentSpeed();
+          speedStaminaText.textContent = '∞';
+          speedFill.style.height = '100%';
+          speedFill.style.background = '#d4af37';
+        } else {
+          const exhausted = now < exhaustedUntil;
+          const newSprinting = sprintKeyDown && !exhausted && stamina > 0;
+          if (newSprinting !== sprinting) {
+            sprinting = newSprinting;
             updateCurrentSpeed();
           }
-        } else {
-          stamina = Math.min(100, stamina + 0.5);
+          if (sprinting) {
+            const drainAmount = (hasSpeedPlus && speedPlusEnabled) ? 0.7 : 1;
+            stamina = Math.max(0, stamina - drainAmount);
+            if (stamina === 0) {
+              exhaustedUntil = now + 20000;
+              sprinting = false;
+              updateCurrentSpeed();
+            }
+          } else {
+            stamina = Math.min(100, stamina + 0.5);
+          }
+          speedStaminaText.textContent = Math.round(stamina) + '%';
+          speedFill.style.height = stamina + '%';
+          speedFill.style.background = exhausted ? '#f00' : '#00f';
         }
-
-        speedStaminaText.textContent = Math.round(stamina) + '%';
-        speedFill.style.height = stamina + '%';
-        speedFill.style.background = exhausted ? '#f00' : '#00f';
       }
 
       if (!hasReverseAbility || !reverseAbilityEnabled) {
