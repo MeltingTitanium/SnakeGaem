@@ -227,14 +227,6 @@
     }
     .artifactItem .toggle-btn.on  { background:limegreen; color:#000; border-color:limegreen; }
     .artifactItem .toggle-btn.off { background:#c00; color:#fff; border-color:#c00; }
-    .artifactSpeedIcon {
-      width:50px; height:50px; border:4px solid #000;
-      position:relative; image-rendering:pixelated;
-    }
-    .artifactSpeedFill {
-      position:absolute; left:0; bottom:0;
-      width:100%; height:100%; background:var(--gold);
-    }
     #shopBackBtn, #proShopBackBtn, #advancedShopBackBtn {
       margin:20px; font-size:24px;
       color:var(--grey); border:2px solid var(--grey);
@@ -477,9 +469,6 @@
       text-shadow: 0 0 4px #000;
       pointer-events: none;
     }
-    #speedStaminaText.bigInfinity {
-      font-size: 72px;
-    }
 
     /* COMBO UI */
     #comboContainer {
@@ -643,17 +632,6 @@
         </div>
         <button id="goldenSnailToggle" class="toggle-btn off">OFF</button>
       </div>
-      <div class="artifactItem" id="goldenStaminaArtifact">
-        <span>Golden Stamina</span>
-        <div id="goldenStaminaIcon" class="artifactSpeedIcon">
-          <div class="artifactSpeedFill"></div>
-        </div>
-        <div style="display:flex; align-items:center; margin-top:8px;">
-          <span id="goldenStaminaOdds">Odds: 1%</span>
-          <span id="goldenStaminaInfo" class="info-btn">?</span>
-        </div>
-        <button id="goldenStaminaToggle" class="toggle-btn off">OFF</button>
-      </div>
     </div>
     <button id="artifactBackBtn">Back</button>
   </div>
@@ -680,12 +658,6 @@
     <div class="appleRow goldenSnailRow" style="display:none;">
       <img id="goldenSnailOddsIcon" src="https://raw.githubusercontent.com/MeltingTitanium/SnakeGaem/refs/heads/main/Models/Golden%20Pixel%20Snail%20on%20Black%20Background%20(1).png" style="width:60px;height:60px;image-rendering:pixelated;"/>
       <span id="goldenSnailOddsText">0%</span>
-    </div>
-    <div class="appleRow goldenStaminaRow" style="display:none;">
-      <div id="goldenStaminaOddsIcon" class="artifactSpeedIcon" style="width:60px;height:60px;">
-        <div class="artifactSpeedFill"></div>
-      </div>
-      <span id="goldenStaminaOddsText">0%</span>
     </div>
     <button id="oddsBackBtn">Back</button>
   </div>
@@ -853,9 +825,6 @@
       const goldenSnailToggleBtn     = document.getElementById('goldenSnailToggle');
       const goldenSnailInfoBtn       = document.getElementById('goldenSnailInfo');
       const goldenSnailOddsText      = document.getElementById('goldenSnailOddsText');
-      const goldenStaminaToggleBtn   = document.getElementById('goldenStaminaToggle');
-      const goldenStaminaInfoBtn     = document.getElementById('goldenStaminaInfo');
-      const goldenStaminaOddsText    = document.getElementById('goldenStaminaOddsText');
       const oddsBackBtn          = document.getElementById('oddsBackBtn');
       const redOddsText          = document.getElementById('redOddsText');
     const megaOddsText         = document.getElementById('megaOddsText');
@@ -949,9 +918,6 @@
       let goldenSnailStamina = 100;
       let snailKeyDown = false;
       let snailRegenAccum = 0;
-      let hasDiscoveredGoldenStamina = false;
-      let goldenStaminaAbilityEnabled = false;
-      let goldenStaminaEnabled = false;
 
     const proficientShopItems = [
       { id:'hugeApple',   name:'Huge Apple', price:500 },
@@ -984,16 +950,11 @@
       if (hasDiscoveredGoldenSnail && goldenSnailAbilityEnabled) {
         showSlow = true;
       }
-      let showSpeed = false;
-      if (goldenStaminaAbilityEnabled) {
-        showSpeed = true;
-      } else {
-        showSpeed = hasSpeedAbility && speedAbilityEnabled;
-      }
       abilityContainer.style.display =
-        ((showSlow) || showSpeed)
+        ((showSlow) || (hasSpeedAbility && speedAbilityEnabled))
         ? 'block' : 'none';
-      speedWrapper.style.display = showSpeed ? 'block' : 'none';
+      speedWrapper.style.display =
+        (hasSpeedAbility && speedAbilityEnabled) ? 'block' : 'none';
     }
 
     function updateGoldenSnailToggle(){
@@ -1004,16 +965,6 @@
       }
       goldenSnailToggleBtn.classList.toggle('on', goldenSnailEnabled);
       goldenSnailToggleBtn.classList.toggle('off', !goldenSnailEnabled);
-    }
-
-    function updateGoldenStaminaToggle(){
-      if (!hasDiscoveredGoldenStamina) {
-        goldenStaminaToggleBtn.textContent = goldenStaminaEnabled ? 'Searching' : 'Not Searching';
-      } else {
-        goldenStaminaToggleBtn.textContent = goldenStaminaEnabled ? 'ON' : 'OFF';
-      }
-      goldenStaminaToggleBtn.classList.toggle('on', goldenStaminaEnabled);
-      goldenStaminaToggleBtn.classList.toggle('off', !goldenStaminaEnabled);
     }
 
     let oddsConfig = null;
@@ -1053,7 +1004,6 @@
       updateDisplays();
       setAbilityVisibility();
       updateGoldenSnailToggle();
-      updateGoldenStaminaToggle();
     });
 
     document.getElementById('musicToggle').addEventListener('change', () => {
@@ -1157,29 +1107,23 @@
 
       oddsBtn.addEventListener('click', () => {
         let redPerc, megaPerc, hugePerc, hugeMegaPerc;
-        let goldenSnailPerc = 0, goldenStaminaPerc = 0;
+        let goldenSnailPerc = 0;
         if (oddsConfig) {
           let rawNormal   = oddsConfig.rawNormal;
           const rawMega   = oddsConfig.rawMega;
           const rawHuge   = oddsConfig.rawHuge;
           const rawHugeMega = oddsConfig.rawHugeMega;
           let rawGoldenSnail = 0;
-          let rawGoldenStamina = 0;
           if (goldenSnailEnabled && !hasDiscoveredGoldenSnail) {
             rawNormal = Math.max(0, rawNormal - 2);
             rawGoldenSnail = 2;
           }
-          if (goldenStaminaEnabled && !hasDiscoveredGoldenStamina) {
-            rawNormal = Math.max(0, rawNormal - 1);
-            rawGoldenStamina = 1;
-          }
-          const sum = rawNormal + rawMega + rawHuge + rawHugeMega + rawGoldenSnail + rawGoldenStamina;
+          const sum = rawNormal + rawMega + rawHuge + rawHugeMega + rawGoldenSnail;
           redPerc      = rawNormal / sum;
           megaPerc     = rawMega   / sum;
           hugePerc     = rawHuge   / sum;
           hugeMegaPerc = rawHugeMega / sum;
           goldenSnailPerc  = rawGoldenSnail / sum;
-          goldenStaminaPerc = rawGoldenStamina / sum;
         } else {
           const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
           const bonusMega    = (hasMegaAbility && megaAbilityEnabled && hasMegaPlus     && megaPlusEnabled)     ? 0.05 : 0;
@@ -1193,23 +1137,19 @@
             if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
           }
           const goldenSnailTotal = (goldenSnailEnabled && !hasDiscoveredGoldenSnail) ? 0.02 : 0;
-          const goldenStaminaTotal = (goldenStaminaEnabled && !hasDiscoveredGoldenStamina) ? 0.01 : 0;
-          redPerc      = 1 - megaTotal - hugeTotal - hugeMegaTotal - goldenSnailTotal - goldenStaminaTotal;
+          redPerc      = 1 - megaTotal - hugeTotal - hugeMegaTotal - goldenSnailTotal;
           megaPerc     = megaTotal;
           hugePerc     = hugeTotal;
           hugeMegaPerc = hugeMegaTotal;
           goldenSnailPerc  = goldenSnailTotal;
-          goldenStaminaPerc = goldenStaminaTotal;
         }
         redOddsText.textContent      = (redPerc * 100).toFixed(1) + '%';
         megaOddsText.textContent     = (megaPerc * 100).toFixed(1) + '%';
         hugeOddsText.textContent     = (hugePerc * 100).toFixed(1) + '%';
         hugeMegaOddsText.textContent = (hugeMegaPerc * 100).toFixed(1) + '%';
         goldenSnailOddsText.textContent  = (goldenSnailPerc * 100).toFixed(1) + '%';
-        goldenStaminaOddsText.textContent = (goldenStaminaPerc * 100).toFixed(1) + '%';
         document.querySelector('.hugeMegaRow').style.display = hasDiscoveredHugeMegaApple ? 'flex' : 'none';
         document.querySelector('.goldenSnailRow').style.display = (!hasDiscoveredGoldenSnail && goldenSnailEnabled) ? 'flex' : 'none';
-        document.querySelector('.goldenStaminaRow').style.display = (!hasDiscoveredGoldenStamina && goldenStaminaEnabled) ? 'flex' : 'none';
 
         menuContainer.style.display  = 'none';
         oddsContainer.style.display  = 'flex';
@@ -1244,54 +1184,16 @@
           }
           if (!goldenSnailEnabled) {
             slowIconEl.src = defaultSlowIconSrc;
-          slowCooldownText.style.color = '#000';
-        }
-        updateShop();
-      }
-        if (!hasDiscoveredGoldenSnail && goldenSnailEnabled && goldenStaminaEnabled && !hasDiscoveredGoldenStamina) {
-          goldenStaminaEnabled = false;
-          updateGoldenStaminaToggle();
-        }
-      updateGoldenSnailToggle();
-      updateGoldenStaminaToggle();
-      setAbilityVisibility();
-    });
-      goldenSnailInfoBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        infoText.textContent = 'A golden variant of the slow down ability... Hold Z to slow you down.';
-        infoModal.style.display = 'flex';
-      });
-
-      goldenStaminaToggleBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        goldenStaminaEnabled = !goldenStaminaEnabled;
-        if (hasDiscoveredGoldenStamina) {
-          goldenStaminaAbilityEnabled = goldenStaminaEnabled;
-          if (goldenStaminaEnabled) {
-            speedAbilityEnabled = false;
-            speedPlusEnabled = false;
-            speedStaminaText.textContent = '∞';
-            speedStaminaText.classList.add('bigInfinity');
-            speedFill.style.background = '#d4af37';
-          }
-          if (!goldenStaminaEnabled) {
-            speedStaminaText.textContent = Math.round(stamina) + '%';
-            speedStaminaText.classList.remove('bigInfinity');
-            speedFill.style.background = '#00f';
+            slowCooldownText.style.color = '#000';
           }
           updateShop();
         }
-        if (!hasDiscoveredGoldenStamina && goldenStaminaEnabled && goldenSnailEnabled && !hasDiscoveredGoldenSnail) {
-          goldenSnailEnabled = false;
-          updateGoldenSnailToggle();
-        }
-        updateGoldenStaminaToggle();
+        updateGoldenSnailToggle();
         setAbilityVisibility();
       });
-
-      goldenStaminaInfoBtn.addEventListener('click', e => {
+      goldenSnailInfoBtn.addEventListener('click', e => {
         e.stopPropagation();
-        infoText.textContent = 'Sprint ability with unlimited stamina.';
+        infoText.textContent = 'A golden variant of the slow down ability... Hold Z to slow you down.';
         infoModal.style.display = 'flex';
       });
 
@@ -1410,10 +1312,6 @@
           div.classList.add('disabled');
           buyBtn.disabled = true;
         }
-        if (buyBtn && isOwned && item.id === 'speed' && goldenStaminaEnabled && hasDiscoveredGoldenStamina) {
-          div.classList.add('disabled');
-          buyBtn.disabled = true;
-        }
         if (buyBtn && isOwned && ['slow','explode','combo','mega','speed'].includes(item.id)) {
           buyBtn.classList.add(
             ((item.id==='slow'    && slowAbilityEnabled)   ||
@@ -1479,7 +1377,6 @@
               comboAbilityEnabled = !comboAbilityEnabled;
             }
             if (item.id === 'speed') {
-              if (goldenStaminaEnabled && hasDiscoveredGoldenStamina) return;
               speedAbilityEnabled = !speedAbilityEnabled;
               if (!speedAbilityEnabled) {
                 speedPlusEnabled = false;
@@ -2096,7 +1993,7 @@
       function randomApple() {
         let p;
         let type;
-        let rawNormal, rawMega, rawHuge, rawHugeMega, rawGoldenSnail = 0, rawGoldenStamina = 0;
+        let rawNormal, rawMega, rawHuge, rawHugeMega, rawGoldenSnail = 0;
         if (oddsConfig) {
           rawNormal   = oddsConfig.rawNormal;
           rawMega     = oddsConfig.rawMega;
@@ -2105,10 +2002,6 @@
           if (goldenSnailEnabled && !hasDiscoveredGoldenSnail) {
             rawNormal = Math.max(0, rawNormal - 2);
             rawGoldenSnail = 2;
-          }
-          if (goldenStaminaEnabled && !hasDiscoveredGoldenStamina) {
-            rawNormal = Math.max(0, rawNormal - 1);
-            rawGoldenStamina = 1;
           }
         } else {
           const baseMega     = (hasMegaAbility  && megaAbilityEnabled)  ? 0.05 : 0;
@@ -2123,15 +2016,13 @@
             if (hasHugePlus && hugePlusEnabled) hugeMegaTotal += 0.002;
           }
           const goldenSnailTotal = (goldenSnailEnabled && !hasDiscoveredGoldenSnail) ? 0.02 : 0;
-          const goldenStaminaTotal = (goldenStaminaEnabled && !hasDiscoveredGoldenStamina) ? 0.01 : 0;
           rawMega     = megaTotal    * 100;
           rawHuge     = hugeTotal    * 100;
           rawHugeMega = hugeMegaTotal * 100;
           rawGoldenSnail  = goldenSnailTotal * 100;
-          rawGoldenStamina = goldenStaminaTotal * 100;
-          rawNormal   = 100 - rawMega - rawHuge - rawHugeMega - rawGoldenSnail - rawGoldenStamina;
+          rawNormal   = 100 - rawMega - rawHuge - rawHugeMega - rawGoldenSnail;
         }
-        const sumRaw = rawNormal + rawMega + rawHuge + rawHugeMega + rawGoldenSnail + rawGoldenStamina;
+        const sumRaw = rawNormal + rawMega + rawHuge + rawHugeMega + rawGoldenSnail;
         const r = Math.random() * sumRaw;
         if (r < rawHugeMega) {
           type = 'hugeMega';
@@ -2141,8 +2032,6 @@
           type = 'mega';
         } else if (r < rawHugeMega + rawHuge + rawMega + rawGoldenSnail) {
           type = 'goldenSnail';
-        } else if (r < rawHugeMega + rawHuge + rawMega + rawGoldenSnail + rawGoldenStamina) {
-          type = 'goldenStamina';
         } else {
           type = 'normal';
         }
@@ -2156,11 +2045,6 @@
           p = {
             x: Math.floor(Math.random() * (cols - 1)),
             y: Math.floor(Math.random() * (rows - 1))
-          };
-        } else if (type === 'goldenStamina') {
-          p = {
-            x: Math.floor(Math.random() * cols),
-            y: Math.floor(Math.random() * rows)
           };
         } else {
           p = {
@@ -2224,8 +2108,6 @@
         ) {
           ate = true;
         }
-      } else if (apple.type === 'goldenStamina') {
-        if (head.x === apple.x && head.y === apple.y) ate = true;
       } else {
         if (head.x === apple.x && head.y === apple.y) ate = true;
       }
@@ -2281,26 +2163,6 @@
               discoveredTextEl.textContent = 'Golden Snail Artifact Discovered';
               setTimeout(() => { discoveredTextEl.textContent = ''; }, 5000);
               updateGoldenSnailToggle();
-              updateShop();
-              setAbilityVisibility();
-            }
-            snake.pop();
-            baseScoreInc = 0;
-            baseCoinInc  = 0;
-          } else if (apple.type === 'goldenStamina') {
-            if (!hasDiscoveredGoldenStamina) {
-              hasDiscoveredGoldenStamina = true;
-              goldenStaminaAbilityEnabled = true;
-              goldenStaminaEnabled = true;
-              speedAbilityEnabled = false;
-              speedPlusEnabled = false;
-              speedStaminaText.textContent = '∞';
-              speedStaminaText.classList.add('bigInfinity');
-              speedFill.style.background = '#d4af37';
-              speedFill.style.height = '100%';
-              discoveredTextEl.textContent = 'Golden Stamina Artifact found';
-              setTimeout(() => { discoveredTextEl.textContent = ''; }, 5000);
-              updateGoldenStaminaToggle();
               updateShop();
               setAbilityVisibility();
             }
@@ -2434,12 +2296,6 @@
           ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize*3, tileSize*3);
         } else if (apple.type === 'goldenSnail') {
           ctx.drawImage(goldenSnailImg, apple.x*tileSize, apple.y*tileSize, tileSize*2, tileSize*2);
-        } else if (apple.type === 'goldenStamina') {
-          ctx.fillStyle = '#d4af37';
-          ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
-          ctx.strokeStyle = '#000';
-          ctx.lineWidth = 4;
-          ctx.strokeRect(apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
         } else {
           ctx.fillStyle = (apple.type==='mega') ? '#551A8B' : 'red';
           ctx.fillRect(apple.x*tileSize, apple.y*tileSize, tileSize, tileSize);
@@ -2522,25 +2378,11 @@
         }
       }
 
-      if (goldenStaminaAbilityEnabled) {
+      if (!hasSpeedAbility || !speedAbilityEnabled) {
+        speedWrapper.style.display = 'none';
+      } else {
         speedWrapper.style.display = 'block';
-        const newSprinting = sprintKeyDown;
-        if (newSprinting !== sprinting) {
-          sprinting = newSprinting;
-          updateCurrentSpeed();
-        }
-        stamina = 100;
-        speedStaminaText.textContent = '∞';
-        speedStaminaText.classList.add('bigInfinity');
-        speedFill.style.height = '100%';
-        speedFill.style.background = '#d4af37';
-        } else if (!hasSpeedAbility || !speedAbilityEnabled) {
-          speedWrapper.style.display = 'none';
-          speedStaminaText.classList.remove('bigInfinity');
-        } else {
-          speedWrapper.style.display = 'block';
-          speedStaminaText.classList.remove('bigInfinity');
-          const exhausted = now < exhaustedUntil;
+        const exhausted = now < exhaustedUntil;
 
         const newSprinting = sprintKeyDown && !exhausted && stamina > 0;
         if (newSprinting !== sprinting) {
